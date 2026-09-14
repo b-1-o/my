@@ -21,7 +21,10 @@ const carouselScript = `
     let current = 0
     let frame = 0
     let pointerActive = false
+    let gestureAxis = null
     let pointerLastX = 0
+    let pointerLastY = 0
+    const isTouchLike = () => window.matchMedia('(max-width: 900px)').matches
 
     const wrap = (value) => ((value + total / 2) % total + total) % total - total / 2
 
@@ -61,27 +64,63 @@ const carouselScript = `
     const onPointerDown = (event) => {
       if (!scene.contains(event.target)) return
       if (event.pointerType === 'mouse' && event.button !== 0) return
-      event.preventDefault()
-      event.stopImmediatePropagation()
       pointerActive = true
+      gestureAxis = null
       pointerLastX = event.clientX
+      pointerLastY = event.clientY
+      if (isTouchLike()) {
+        scene.style.touchAction = 'pan-y'
+      } else {
+        event.preventDefault()
+        event.stopImmediatePropagation()
+      }
       scene.setPointerCapture?.(event.pointerId)
     }
 
     const onPointerMove = (event) => {
       if (!pointerActive) return
-      event.preventDefault()
-      event.stopImmediatePropagation()
-      const delta = pointerLastX - event.clientX
+
+      const dx = event.clientX - pointerLastX
+      const dy = event.clientY - pointerLastY
+
+      if (isTouchLike()) {
+        if (!gestureAxis) {
+          const distance = Math.hypot(dx, dy)
+          if (distance < 6) return
+          gestureAxis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y'
+          if (gestureAxis === 'x') {
+            event.preventDefault()
+            event.stopImmediatePropagation()
+            scene.style.touchAction = 'none'
+          } else {
+            pointerActive = false
+            scene.style.touchAction = 'pan-y'
+            return
+          }
+        }
+
+        if (gestureAxis === 'y') return
+        event.preventDefault()
+        event.stopImmediatePropagation()
+      } else {
+        event.preventDefault()
+        event.stopImmediatePropagation()
+      }
+
+      target += -dx * 0.009
       pointerLastX = event.clientX
-      target += delta * 0.009
+      pointerLastY = event.clientY
     }
 
     const stopPointer = (event) => {
       if (!pointerActive) return
-      event.preventDefault()
-      event.stopImmediatePropagation()
+      if (!isTouchLike() || gestureAxis === 'x') {
+        event.preventDefault()
+        event.stopImmediatePropagation()
+      }
       pointerActive = false
+      gestureAxis = null
+      scene.style.touchAction = isTouchLike() ? 'pan-y' : 'none'
     }
 
     render(0)
@@ -143,7 +182,7 @@ const mobileCss = `
     flex:0 0 auto;
     margin:16px -20px 0;
     z-index:8;
-    touch-action:none;
+    touch-action:pan-y;
     isolation:isolate;
   }
   .spiral-stage {
