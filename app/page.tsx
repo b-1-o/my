@@ -31,32 +31,49 @@ const stack = ['HTML', 'CSS', 'JavaScript', 'React', 'Next.js', 'TypeScript', 'G
 
 function SpiralGallery() {
   const stage = useRef<HTMLDivElement>(null)
-  const target = useRef({ x: 0, y: 0, scroll: 0 })
-  const current = useRef({ x: 0, y: 0, scroll: 0 })
+  const target = useRef({ rotation: 0, momentum: 0 })
+  const current = useRef({ rotation: 0, momentum: 0 })
 
   useEffect(() => {
     let frame = 0
-    const onMove = (event: MouseEvent) => {
-      target.current.x = (event.clientX / window.innerWidth - 0.5) * 20
-      target.current.y = (event.clientY / window.innerHeight - 0.5) * 14
+
+    const onWheel = (event: WheelEvent) => {
+      const bounds = stage.current?.getBoundingClientRect()
+      if (!bounds) return
+      const insideHero = window.scrollY < window.innerHeight * 1.15
+      const insideGallery = event.clientX >= bounds.left - 180 && event.clientX <= bounds.right + 180 && event.clientY >= bounds.top - 160 && event.clientY <= bounds.bottom + 160
+      if (!insideHero || !insideGallery) return
+
+      target.current.rotation += event.deltaY * 0.24
+      target.current.momentum = Math.max(-16, Math.min(16, target.current.momentum + event.deltaY * 0.018))
     }
-    const onScroll = () => { target.current.scroll = window.scrollY * 0.045 }
+
+    const onScroll = () => {
+      if (window.scrollY > window.innerHeight * 1.1) {
+        target.current.rotation = window.scrollY * 0.22
+      }
+    }
+
     const tick = () => {
-      current.current.x += (target.current.x - current.current.x) * 0.055
-      current.current.y += (target.current.y - current.current.y) * 0.055
-      current.current.scroll += (target.current.scroll - current.current.scroll) * 0.055
+      const targetRotation = target.current.rotation
+      current.current.rotation += (targetRotation - current.current.rotation) * 0.085
+      current.current.momentum *= 0.92
+      if (Math.abs(current.current.momentum) > 0.01) {
+        current.current.rotation += current.current.momentum
+      }
+
       if (stage.current) {
-        stage.current.style.setProperty('--mx', `${current.current.x}deg`)
-        stage.current.style.setProperty('--my', `${current.current.y}deg`)
-        stage.current.style.setProperty('--scroll-rot', `${current.current.scroll}deg`)
+        stage.current.style.setProperty('--carousel-rot', `${current.current.rotation}deg`)
+        stage.current.style.setProperty('--momentum', `${current.current.momentum}`)
       }
       frame = requestAnimationFrame(tick)
     }
-    window.addEventListener('mousemove', onMove, { passive: true })
+
+    window.addEventListener('wheel', onWheel, { passive: true })
     window.addEventListener('scroll', onScroll, { passive: true })
     frame = requestAnimationFrame(tick)
     return () => {
-      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('wheel', onWheel)
       window.removeEventListener('scroll', onScroll)
       cancelAnimationFrame(frame)
     }
@@ -65,23 +82,41 @@ function SpiralGallery() {
   return (
     <div className="spiral-scene" aria-label="Interactive portfolio gallery">
       <div className="spiral-glow" />
+      <div className="spiral-orbit-ring ring-a" />
+      <div className="spiral-orbit-ring ring-b" />
       <div className="spiral-floor" />
       <div ref={stage} className="spiral-stage">
-        {orbitCards.map((card, i) => {
-          const progress = i / (orbitCards.length - 1)
-          const angle = -155 + progress * 310
-          const lift = -230 + progress * 460
-          const depth = 150 + Math.sin(progress * Math.PI) * 250
-          return (
-            <article className="orbit-card" key={card.title} style={{ '--angle': `${angle}deg`, '--lift': `${lift}px`, '--depth': `${depth}px` } as CSSProperties}>
-              <div className="orbit-image"><img src={card.image} alt={card.title} loading={i < 4 ? 'eager' : 'lazy'} /><span>{String(i + 1).padStart(2, '0')}</span></div>
-              <div className="orbit-copy"><small>{card.tag}</small><strong>{card.title}</strong></div>
-            </article>
-          )
-        })}
-        <div className="spiral-core"><img src={PROFILE_IMAGE} alt="Erik" /><div><b>ERIK</b><span>@webbio</span></div><small>WEB DEVELOPER / UI DESIGNER</small></div>
+        <div className="carousel-track">
+          {orbitCards.map((card, i) => {
+            const angle = i * (360 / orbitCards.length)
+            return (
+              <article
+                className="orbit-card"
+                key={card.title}
+                style={{ '--angle': `${angle}deg`, '--index': i } as CSSProperties}
+              >
+                <div className="glass-card-edge" />
+                <div className="orbit-image">
+                  <img src={card.image} alt={card.title} loading={i < 3 ? 'eager' : 'lazy'} />
+                  <div className="orbit-overlay" />
+                  <span>{String(i + 1).padStart(2, '0')}</span>
+                </div>
+                <div className="orbit-copy"><small>{card.tag}</small><strong>{card.title}</strong></div>
+              </article>
+            )
+          })}
+        </div>
+        <div className="spiral-core">
+          <div className="core-glow" />
+          <img src={PROFILE_IMAGE} alt="Erik" />
+          <div><b>ERIK</b><span>@webbio</span></div>
+          <small>WEB DEVELOPER / UI DESIGNER</small>
+        </div>
       </div>
-      <div className="spiral-hint"><span>MOVE</span><i>↻</i><span>SCROLL TO ROTATE</span></div>
+      <div className="spiral-ui">
+        <span><i /> SCROLL TO EXPLORE</span>
+        <b>01</b><em>/ 10</em>
+      </div>
     </div>
   )
 }
