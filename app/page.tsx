@@ -90,19 +90,29 @@ function SpiralGallery() {
       schedule()
     }
 
+    const isMobile = () => window.matchMedia('(max-width: 900px)').matches
+
     const onWheel = (event: WheelEvent) => {
       event.preventDefault()
-      const factor = window.matchMedia('(max-width: 900px)').matches ? 0.009 : 0.006
+      const factor = isMobile() ? 0.009 : 0.006
       addPhase(Math.max(-120, Math.min(120, event.deltaY)) * factor)
     }
 
     const onPointerDown = (event: PointerEvent) => {
       if (event.pointerType === 'mouse' && event.button !== 0) return
+
       pointer.current.active = true
       pointer.current.axis = null
       pointer.current.lastX = event.clientX
       pointer.current.lastY = event.clientY
-      root.setPointerCapture?.(event.pointerId)
+
+      // Let the browser handle normal vertical page scrolling until a horizontal gesture is detected.
+      if (!isMobile()) {
+        event.preventDefault()
+        root.setPointerCapture?.(event.pointerId)
+      } else {
+        root.style.touchAction = 'pan-y'
+      }
     }
 
     const onPointerMove = (event: PointerEvent) => {
@@ -112,23 +122,31 @@ function SpiralGallery() {
       const dy = event.clientY - pointer.current.lastY
 
       if (!pointer.current.axis) {
-        if (Math.hypot(dx, dy) < 4) return
+        if (Math.hypot(dx, dy) < 6) return
         pointer.current.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y'
+
+        if (isMobile()) {
+          if (pointer.current.axis === 'y') {
+            // Do not prevent the browser's native vertical page scroll.
+            pointer.current.active = false
+            root.style.touchAction = 'pan-y'
+            return
+          }
+
+          // Horizontal gesture: take over only after the direction is clear.
+          event.preventDefault()
+          root.style.touchAction = 'none'
+          root.setPointerCapture?.(event.pointerId)
+        }
       }
 
-      const mobile = window.matchMedia('(max-width: 900px)').matches
-
-      if (mobile && pointer.current.axis === 'y') {
-        pointer.current.active = false
-        root.style.touchAction = 'pan-y'
-        return
-      }
+      if (isMobile() && pointer.current.axis === 'y') return
 
       event.preventDefault()
-      if (mobile) root.style.touchAction = 'none'
+      if (isMobile()) root.style.touchAction = 'none'
 
-      if (mobile) {
-        addPhase(-dx * 0.016)
+      if (isMobile()) {
+        addPhase(-dx * 0.012)
       } else {
         addPhase(-dy * 0.018)
       }
@@ -137,10 +155,18 @@ function SpiralGallery() {
       pointer.current.lastY = event.clientY
     }
 
-    const stopPointer = () => {
+    const stopPointer = (event: PointerEvent) => {
+      if (isMobile() && pointer.current.axis !== 'x') {
+        pointer.current.active = false
+        pointer.current.axis = null
+        root.style.touchAction = 'pan-y'
+        return
+      }
+
       pointer.current.active = false
       pointer.current.axis = null
       root.style.touchAction = 'pan-y'
+      if (root.hasPointerCapture?.(event.pointerId)) root.releasePointerCapture(event.pointerId)
     }
 
     root.style.touchAction = 'pan-y'
@@ -165,7 +191,7 @@ function SpiralGallery() {
   return (
     <>
       <style>{`/* existing SpiralGallery styles intentionally kept unchanged */`}</style>
-      <div ref={scene} className="spiral-scene" aria-label="Infinite interactive 3D spiral carousel. Scroll or drag inside to rotate.">
+      <div ref={scene} className="spiral-scene" aria-label="Infinite interactive 3D spiral carousel. Swipe left or right on mobile to rotate; swipe up or down to scroll the page.">
         <div className="spiral-axis" />
         <div className="spiral-trace" />
         <div className="spiral-stage">
