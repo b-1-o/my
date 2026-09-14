@@ -15,13 +15,11 @@ const carouselScript = `
     if (!cards.length) return true
 
     const total = cards.length
-    let phase = 0
-    let animating = false
-    let wheelLocked = false
+    let target = 0
+    let current = 0
+    let frame = 0
     let pointerActive = false
-    let pointerStartY = 0
     let pointerLastY = 0
-    let pointerMoved = false
 
     const wrap = (value) => ((value + total / 2) % total + total) % total - total / 2
 
@@ -43,50 +41,28 @@ const carouselScript = `
       })
     }
 
-    const animateStep = (direction) => {
-      if (animating) return
-      animating = true
-      const from = phase
-      const to = phase + direction
-      const start = performance.now()
-      const duration = 680
-
-      const frame = (now) => {
-        const t = Math.min(1, (now - start) / duration)
-        const eased = 1 - Math.pow(1 - t, 3)
-        phase = from + (to - from) * eased
-        render(phase)
-        if (t < 1) {
-          requestAnimationFrame(frame)
-        } else {
-          phase = to
-          render(phase)
-          animating = false
-        }
-      }
-
-      requestAnimationFrame(frame)
+    const tick = () => {
+      current += (target - current) * 0.075
+      if (Math.abs(target - current) < 0.0005) current = target
+      render(current)
+      frame = requestAnimationFrame(tick)
     }
 
     const onWheel = (event) => {
       if (!scene.contains(event.target)) return
       event.preventDefault()
       event.stopImmediatePropagation()
-      if (wheelLocked || animating || Math.abs(event.deltaY) < 1) return
 
-      wheelLocked = true
-      animateStep(event.deltaY > 0 ? 1 : -1)
-      window.setTimeout(() => { wheelLocked = false }, 760)
+      const delta = Math.max(-120, Math.min(120, event.deltaY))
+      target += delta * 0.006
     }
 
     const onPointerDown = (event) => {
       if (!scene.contains(event.target)) return
+      if (event.pointerType === 'mouse' && event.button !== 0) return
       event.preventDefault()
       event.stopImmediatePropagation()
-      if (event.pointerType === 'mouse' && event.button !== 0) return
       pointerActive = true
-      pointerMoved = false
-      pointerStartY = event.clientY
       pointerLastY = event.clientY
       scene.setPointerCapture?.(event.pointerId)
     }
@@ -95,27 +71,25 @@ const carouselScript = `
       if (!pointerActive) return
       event.preventDefault()
       event.stopImmediatePropagation()
-      if (Math.abs(event.clientY - pointerStartY) > 8) pointerMoved = true
+      const delta = pointerLastY - event.clientY
       pointerLastY = event.clientY
+      target += delta * 0.009
     }
 
-    const finishPointer = (event) => {
+    const stopPointer = (event) => {
       if (!pointerActive) return
       event.preventDefault()
       event.stopImmediatePropagation()
       pointerActive = false
-      const delta = pointerStartY - pointerLastY
-      if (pointerMoved && Math.abs(delta) >= 28 && !animating) {
-        animateStep(delta > 0 ? 1 : -1)
-      }
     }
 
-    render(phase)
+    render(0)
+    frame = requestAnimationFrame(tick)
     window.addEventListener('wheel', onWheel, { capture: true, passive: false })
     window.addEventListener('pointerdown', onPointerDown, { capture: true, passive: false })
     window.addEventListener('pointermove', onPointerMove, { capture: true, passive: false })
-    window.addEventListener('pointerup', finishPointer, { capture: true, passive: false })
-    window.addEventListener('pointercancel', finishPointer, { capture: true, passive: false })
+    window.addEventListener('pointerup', stopPointer, { capture: true, passive: false })
+    window.addEventListener('pointercancel', stopPointer, { capture: true, passive: false })
 
     return true
   }
