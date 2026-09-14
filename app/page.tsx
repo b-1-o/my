@@ -3,19 +3,19 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 
 const PROFILE_IMAGE = 'https://fiverr-res.cloudinary.com/t_profile_thumb,q_auto,f_auto/attachments/profile/photo/49d31e9662d2d97d97e08ae40327fe00-1789350656264/060a52f2-b6e4-431a-bcc0-8b814c764ec9.jpeg'
-const REFS = 'https://raw.githubusercontent.com/b-1-o/refs/main/'
+const ASSET_BASE = process.env.NODE_ENV === 'production' ? '/my-/assets/' : '/assets/'
 
 const orbitCards = [
-  { title: 'GRAPHIC DESIGN', tag: 'VISUAL', image: `${REFS}01-graphic-designer.png` },
-  { title: 'BUSINESS', tag: 'WEB', image: `${REFS}02-business-consultant.png` },
-  { title: 'FOOD & BRAND', tag: 'LANDING', image: `${REFS}03-pastry-chef.png` },
-  { title: 'PHOTOGRAPHY', tag: 'PORTFOLIO', image: `${REFS}04-photographer.png` },
-  { title: 'LAW FIRM', tag: 'BUSINESS WEB', image: `${REFS}05-law-firm.png` },
-  { title: 'FITNESS', tag: 'SERVICE', image: `${REFS}06-fitness-coach.png` },
-  { title: 'RESTAURANT', tag: 'HOSPITALITY', image: `${REFS}07-restaurant.png` },
-  { title: 'ARCHITECTURE', tag: 'EDITORIAL', image: `${REFS}08-architect.png` },
-  { title: 'TECH STARTUP', tag: 'PRODUCT', image: `${REFS}09-tech-startup.png` },
-  { title: 'FLORIST', tag: 'E-COMMERCE', image: `${REFS}10-florist.png` },
+  { title: 'GRAPHIC DESIGN', tag: 'VISUAL', image: `${ASSET_BASE}01-graphic-designer.png` },
+  { title: 'BUSINESS', tag: 'WEB', image: `${ASSET_BASE}02-business-consultant.png` },
+  { title: 'FOOD & BRAND', tag: 'LANDING', image: `${ASSET_BASE}03-pastry-chef.png` },
+  { title: 'PHOTOGRAPHY', tag: 'PORTFOLIO', image: `${ASSET_BASE}04-photographer.png` },
+  { title: 'LAW FIRM', tag: 'BUSINESS WEB', image: `${ASSET_BASE}05-law-firm.png` },
+  { title: 'FITNESS', tag: 'SERVICE', image: `${ASSET_BASE}06-fitness-coach.png` },
+  { title: 'RESTAURANT', tag: 'HOSPITALITY', image: `${ASSET_BASE}07-restaurant.png` },
+  { title: 'ARCHITECTURE', tag: 'EDITORIAL', image: `${ASSET_BASE}08-architect.png` },
+  { title: 'TECH STARTUP', tag: 'PRODUCT', image: `${ASSET_BASE}09-tech-startup.png` },
+  { title: 'FLORIST', tag: 'E-COMMERCE', image: `${ASSET_BASE}10-florist.png` },
 ]
 
 const services = [
@@ -68,9 +68,10 @@ function SpiralGallery() {
       <div className="spiral-floor" />
       <div ref={stage} className="spiral-stage">
         {orbitCards.map((card, i) => {
-          const angle = (i / orbitCards.length) * 360
-          const lift = Math.sin((i / orbitCards.length) * Math.PI * 2) * 110
-          const depth = 270 + Math.cos((i / orbitCards.length) * Math.PI * 2) * 80
+          const progress = i / (orbitCards.length - 1)
+          const angle = -155 + progress * 310
+          const lift = -230 + progress * 460
+          const depth = 150 + Math.sin(progress * Math.PI) * 250
           return (
             <article
               className="orbit-card"
@@ -135,7 +136,7 @@ export default function Home() {
             <div className="hero-actions"><a className="pill primary" href="#contact">START A PROJECT <span>↗</span></a><a className="pill" href="#work">SEE MY WORK <span>↓</span></a></div>
           </div>
           <SpiralGallery />
-          <div className="hero-profile"><img src={PROFILE_IMAGE} alt="Erik" /><div><b>@webbio</b><span>WEB DEVELOPER</span></div><strong>01 — 06</strong></div>
+          <div className="hero-profile"><img src={PROFILE_IMAGE} alt="Erik" /><div><b>@webbio</b><span>WEB DEVELOPER</span></div><strong>01 — 10</strong></div>
           <div className="hero-side-note">DESIGN<br />DEVELOPMENT<br />MOTION<br />DETAIL</div>
         </section>
 
