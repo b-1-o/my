@@ -12,7 +12,9 @@ const carouselScript = `
     const scene = document.querySelector('.spiral-scene')
     if (!scene) return false
     const cards = Array.from(scene.querySelectorAll('.spiral-card'))
-    if (!cards.length) return true
+    if (!cards.length) return false
+    if (scene.dataset.carouselFixed === '1') return true
+    scene.dataset.carouselFixed = '1'
 
     const total = cards.length
     let target = 0
@@ -52,7 +54,6 @@ const carouselScript = `
       if (!scene.contains(event.target)) return
       event.preventDefault()
       event.stopImmediatePropagation()
-
       const delta = Math.max(-120, Math.min(120, event.deltaY))
       target += delta * 0.006
     }
@@ -99,7 +100,7 @@ const carouselScript = `
       if (init()) observer.disconnect()
     })
     observer.observe(document.documentElement, { childList: true, subtree: true })
-    window.setTimeout(() => observer.disconnect(), 10000)
+    window.setTimeout(() => observer.disconnect(), 15000)
   }
 })()
 `
@@ -143,19 +144,23 @@ const mobileCss = `
     margin:16px -20px 0;
     z-index:8;
     touch-action:none;
+    isolation:isolate;
   }
   .spiral-stage {
+    position:absolute;
     left:50%;
-    top:52%;
-    width:700px;
+    top:50%;
+    width:720px;
     height:760px;
-    transform:translate(-50%,-50%) rotateX(-2deg) rotateY(-3deg) scale(.48);
+    z-index:2;
+    transform:translate(-50%,-50%) rotateX(-2deg) rotateY(-2deg) scale(.54);
   }
-  .spiral-axis { left:50%; top:4%; height:92%; }
-  .spiral-trace { display:none; }
+  .spiral-track { position:absolute; inset:0; z-index:2; }
   .spiral-card { width:234px; height:147px; margin:-73px 0 0 -117px; }
-  .spiral-edge { height:25%; }
-  .spiral-hint { left:50%; right:auto; bottom:12px; transform:translateX(-50%); white-space:nowrap; font-size:7px; }
+  .spiral-axis { left:50%; top:3%; height:94%; z-index:1; }
+  .spiral-trace { display:none; }
+  .spiral-edge { height:18%; z-index:8; }
+  .spiral-hint { left:50%; right:auto; bottom:12px; transform:translateX(-50%); white-space:nowrap; font-size:7px; z-index:10; }
   .hero-profile, .hero-side-note { display:none; }
 }
 
@@ -167,8 +172,8 @@ const mobileCss = `
   .hero-copy p { max-width:310px; font-size:11.5px; }
   .pill { padding:12px 15px; font-size:8px; }
   .pill span { margin-left:12px; }
-  .spiral-scene { width:calc(100% + 32px); margin-left:-16px; margin-right:-16px; height:360px; min-height:360px; margin-top:12px; }
-  .spiral-stage { top:52%; scale:.41; }
+  .spiral-scene { width:calc(100% + 32px); margin-left:-16px; margin-right:-16px; height:370px; min-height:370px; margin-top:12px; }
+  .spiral-stage { left:50%; top:50%; width:700px; height:740px; transform:translate(-50%,-50%) rotateX(-2deg) rotateY(-2deg) scale(.46); }
   .spiral-card { width:220px; height:139px; margin:-69px 0 0 -110px; }
   .spiral-copy strong { font-size:18px; }
   .spiral-hint { bottom:8px; }
