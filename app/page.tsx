@@ -34,49 +34,19 @@ function SpiralGallery() {
   const cardsRef = useRef<HTMLElement[]>([])
   const phaseTarget = useRef(0)
   const phaseCurrent = useRef(0)
-  const pointer = useRef({ active: false, lastY: 0 })
+  const frame = useRef(0)
+  const pointer = useRef({ active: false, axis: null as 'x' | 'y' | null, lastX: 0, lastY: 0 })
   const total = orbitCards.length
 
   useEffect(() => {
     const root = scene.current
     if (!root) return
 
-    let frame = 0
     const cards = cardsRef.current.filter(Boolean)
-
-    const addPhase = (amount: number) => {
-      phaseTarget.current += amount
-    }
-
-    const onWheel = (event: WheelEvent) => {
-      event.preventDefault()
-      addPhase(event.deltaY * 0.012)
-    }
-
-    const onPointerDown = (event: PointerEvent) => {
-      pointer.current.active = true
-      pointer.current.lastY = event.clientY
-      root.setPointerCapture?.(event.pointerId)
-    }
-
-    const onPointerMove = (event: PointerEvent) => {
-      if (!pointer.current.active) return
-      event.preventDefault()
-      const delta = pointer.current.lastY - event.clientY
-      pointer.current.lastY = event.clientY
-      addPhase(delta * 0.018)
-    }
-
-    const stopPointer = () => {
-      pointer.current.active = false
-    }
-
     const wrap = (value: number) => ((value + total / 2) % total + total) % total - total / 2
 
-    const tick = () => {
-      phaseCurrent.current += (phaseTarget.current - phaseCurrent.current) * 0.11
+    const render = () => {
       const phase = phaseCurrent.current
-
       cards.forEach((card, index) => {
         const slot = wrap(index - phase)
         const abs = Math.abs(slot)
@@ -97,16 +67,104 @@ function SpiralGallery() {
         card.style.setProperty('--blur', `${blur}px`)
         card.style.setProperty('--tilt', `${tilt}deg`)
       })
-
-      frame = requestAnimationFrame(tick)
     }
+
+    const animate = () => {
+      frame.current = 0
+      const delta = phaseTarget.current - phaseCurrent.current
+      phaseCurrent.current += delta * 0.11
+
+      if (Math.abs(delta) < 0.0004) {
+        phaseCurrent.current = phaseTarget.current
+        render()
+        return
+      }
+
+      render()
+      frame.current = requestAnimationFrame(animate)
+    }
+
+    const schedule = () => {
+      if (!frame.current) frame.current = requestAnimationFrame(animate)
+    }
+
+    const addPhase = (amount: number) => {
+      phaseTarget.current += amount
+      schedule()
+    }
+
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault()
+      addPhase(event.deltaY * 0.012)
+    }
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return
+
+      pointer.current.active = true
+      pointer.current.axis = null
+      pointer.current.lastX = event.clientX
+      pointer.current.lastY = event.clientY
+
+      if (event.pointerType !== 'touch') {
+        event.preventDefault()
+        root.setPointerCapture?.(event.pointerId)
+      } else {
+        root.style.touchAction = 'pan-y'
+      }
+    }
+
+    const onPointerMove = (event: PointerEvent) => {
+      if (!pointer.current.active) return
+
+      const dx = event.clientX - pointer.current.lastX
+      const dy = event.clientY - pointer.current.lastY
+
+      if (!pointer.current.axis) {
+        if (Math.hypot(dx, dy) < 8) return
+        pointer.current.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y'
+
+        if (event.pointerType === 'touch') {
+          if (pointer.current.axis === 'y') {
+            pointer.current.active = false
+            root.style.touchAction = 'pan-y'
+            return
+          }
+
+          root.style.touchAction = 'none'
+          root.setPointerCapture?.(event.pointerId)
+        }
+      }
+
+      if (event.pointerType === 'touch' && pointer.current.axis !== 'x') return
+
+      event.preventDefault()
+
+      if (event.pointerType === 'touch') {
+        addPhase(-dx * 0.018)
+      } else {
+        addPhase(-dy * 0.018)
+      }
+
+      pointer.current.lastX = event.clientX
+      pointer.current.lastY = event.clientY
+    }
+
+    const stopPointer = (event: PointerEvent) => {
+      pointer.current.active = false
+      pointer.current.axis = null
+      root.style.touchAction = 'pan-y'
+      if (root.hasPointerCapture?.(event.pointerId)) root.releasePointerCapture(event.pointerId)
+    }
+
+    root.style.touchAction = 'pan-y'
+    render()
 
     root.addEventListener('wheel', onWheel, { passive: false })
     root.addEventListener('pointerdown', onPointerDown)
     root.addEventListener('pointermove', onPointerMove, { passive: false })
     root.addEventListener('pointerup', stopPointer)
     root.addEventListener('pointercancel', stopPointer)
-    frame = requestAnimationFrame(tick)
 
     return () => {
       root.removeEventListener('wheel', onWheel)
@@ -114,14 +172,14 @@ function SpiralGallery() {
       root.removeEventListener('pointermove', onPointerMove)
       root.removeEventListener('pointerup', stopPointer)
       root.removeEventListener('pointercancel', stopPointer)
-      cancelAnimationFrame(frame)
+      if (frame.current) cancelAnimationFrame(frame.current)
     }
-  }, [])
+  }, [total])
 
   return (
     <>
       <style>{`
-        .spiral-scene{position:absolute;inset:0 0 0 16%;perspective:1800px;overflow:hidden;cursor:ns-resize;touch-action:none;user-select:none;z-index:5;}
+        .spiral-scene{position:absolute;inset:0 0 0 16%;perspective:1800px;overflow:hidden;cursor:ns-resize;touch-action:pan-y;user-select:none;z-index:5;}
         .spiral-scene:before{content:"";position:absolute;left:50%;top:50%;width:66%;height:94%;transform:translate(-50%,-50%);background:radial-gradient(ellipse at center,rgba(255,255,255,.13) 0%,rgba(140,155,255,.07) 28%,transparent 68%);filter:blur(30px);pointer-events:none;}
         .spiral-axis{position:absolute;left:57%;top:7%;width:1px;height:86%;background:linear-gradient(to bottom,transparent,rgba(255,255,255,.11) 14%,rgba(255,255,255,.17) 50%,rgba(255,255,255,.11) 86%,transparent);box-shadow:0 0 30px rgba(255,255,255,.12);opacity:.72;pointer-events:none;}
         .spiral-stage{position:absolute;left:57%;top:50%;width:900px;height:900px;transform:translate(-50%,-50%) rotateX(-4deg) rotateY(-8deg);transform-style:preserve-3d;}
@@ -149,7 +207,7 @@ function SpiralGallery() {
         @media(max-width:760px){.spiral-scene{top:40%;height:60%;}.spiral-stage{left:58%;top:52%;width:700px;height:760px;transform:translate(-50%,-50%) rotateX(-2deg) rotateY(-4deg) scale(.58);}.spiral-axis{left:58%;top:6%;height:88%;}.spiral-trace{display:none;}.spiral-card{width:234px;height:147px;margin:-73px 0 0 -117px;}.spiral-edge{height:30%;}.spiral-hint{left:50%;right:auto;bottom:18px;transform:translateX(-50%);white-space:nowrap;font-size:7px;}.hero-copy{z-index:20;}.hero-profile{z-index:30;}}
         @media(max-width:480px){.spiral-scene{top:41%;height:59%;}.spiral-stage{left:56%;top:53%;width:680px;height:740px;transform:translate(-50%,-50%) rotateX(-2deg) rotateY(-3deg) scale(.49);}.spiral-axis{left:56%;}.spiral-card{width:220px;height:139px;margin:-69px 0 0 -110px;}.spiral-edge{height:32%;}.spiral-copy strong{font-size:19px;}.spiral-hint{bottom:14px;}.hero-profile strong{display:none;}.hero-copy p{max-width:295px;}}
       `}</style>
-      <div ref={scene} className="spiral-scene" aria-label="Infinite interactive 3D spiral carousel. Scroll or drag inside to rotate.">
+      <div ref={scene} className="spiral-scene" aria-label="Infinite interactive 3D spiral carousel. Swipe left or right to rotate; swipe up or down to scroll the page.">
         <div className="spiral-axis" />
         <div className="spiral-trace" />
         <div className="spiral-stage">
