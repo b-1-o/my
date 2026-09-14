@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 
 const PROFILE_IMAGE = 'https://fiverr-res.cloudinary.com/t_profile_thumb,q_auto,f_auto/attachments/profile/photo/49d31e9662d2d97d97e08ae40327fe00-1789350656264/060a52f2-b6e4-431a-bcc0-8b814c764ec9.jpeg'
-const ASSET_BASE = process.env.NODE_ENV === 'production' ? '/my-/assets/' : '/assets/'
+const ASSET_BASE = process.env.NODE_ENV === 'production' ? '/my/assets/' : '/assets/'
 
 const orbitCards = [
   { title: 'GRAPHIC DESIGN', tag: 'VISUAL', image: `${ASSET_BASE}01-graphic-designer.png` },
@@ -73,24 +73,13 @@ function SpiralGallery() {
           const lift = -230 + progress * 460
           const depth = 150 + Math.sin(progress * Math.PI) * 250
           return (
-            <article
-              className="orbit-card"
-              key={card.title}
-              style={{ '--angle': `${angle}deg`, '--lift': `${lift}px`, '--depth': `${depth}px` } as CSSProperties}
-            >
-              <div className="orbit-image">
-                <img src={card.image} alt={card.title} loading={i < 4 ? 'eager' : 'lazy'} />
-                <span>{String(i + 1).padStart(2, '0')}</span>
-              </div>
+            <article className="orbit-card" key={card.title} style={{ '--angle': `${angle}deg`, '--lift': `${lift}px`, '--depth': `${depth}px` } as CSSProperties}>
+              <div className="orbit-image"><img src={card.image} alt={card.title} loading={i < 4 ? 'eager' : 'lazy'} /><span>{String(i + 1).padStart(2, '0')}</span></div>
               <div className="orbit-copy"><small>{card.tag}</small><strong>{card.title}</strong></div>
             </article>
           )
         })}
-        <div className="spiral-core">
-          <img src={PROFILE_IMAGE} alt="Erik" />
-          <div><b>ERIK</b><span>@webbio</span></div>
-          <small>WEB DEVELOPER / UI DESIGNER</small>
-        </div>
+        <div className="spiral-core"><img src={PROFILE_IMAGE} alt="Erik" /><div><b>ERIK</b><span>@webbio</span></div><small>WEB DEVELOPER / UI DESIGNER</small></div>
       </div>
       <div className="spiral-hint"><span>MOVE</span><i>↻</i><span>SCROLL TO ROTATE</span></div>
     </div>
@@ -103,17 +92,10 @@ function Reveal({ children, className = '', id }: { children: ReactNode; classNa
 
 export default function Home() {
   const [progress, setProgress] = useState(0)
-
   useEffect(() => {
-    const onScroll = () => {
-      const max = document.documentElement.scrollHeight - window.innerHeight
-      setProgress(max > 0 ? (window.scrollY / max) * 100 : 0)
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    onScroll()
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => entry.isIntersecting && entry.target.classList.add('visible'))
-    }, { threshold: 0.12 })
+    const onScroll = () => { const max = document.documentElement.scrollHeight - window.innerHeight; setProgress(max > 0 ? (window.scrollY / max) * 100 : 0) }
+    window.addEventListener('scroll', onScroll, { passive: true }); onScroll()
+    const observer = new IntersectionObserver((entries) => { entries.forEach((entry) => entry.isIntersecting && entry.target.classList.add('visible')) }, { threshold: 0.12 })
     document.querySelectorAll('.reveal').forEach((el) => observer.observe(el))
     return () => { window.removeEventListener('scroll', onScroll); observer.disconnect() }
   }, [])
@@ -121,52 +103,18 @@ export default function Home() {
   return (
     <>
       <div className="progress" style={{ width: `${progress}%` }} />
-      <header className="topbar">
-        <a href="#top" className="brand">W<span>®</span></a>
-        <nav><a href="#services">Services</a><a href="#work">Work</a><a href="#about">About</a></nav>
-        <a href="#contact" className="top-cta">GET IN TOUCH <span>↗</span></a>
-      </header>
-
+      <header className="topbar"><a href="#top" className="brand">W<span>®</span></a><nav><a href="#services">Services</a><a href="#work">Work</a><a href="#about">About</a></nav><a href="#contact" className="top-cta">GET IN TOUCH <span>↗</span></a></header>
       <main id="top">
-        <section className="hero-fiverr">
-          <div className="hero-copy">
-            <div className="micro"><span className="dot" /> AVAILABLE FOR PROJECTS <b>UNITED STATES</b></div>
-            <h1>WEB DESIGN<br /><em>& DEVELOPMENT</em><br />FOR PEOPLE<br />WHO <span>CARE.</span></h1>
-            <p>I build clean, modern and conversion-focused websites for small businesses, freelancers and startups — with a strong visual direction and a fast frontend.</p>
-            <div className="hero-actions"><a className="pill primary" href="#contact">START A PROJECT <span>↗</span></a><a className="pill" href="#work">SEE MY WORK <span>↓</span></a></div>
-          </div>
-          <SpiralGallery />
-          <div className="hero-profile"><img src={PROFILE_IMAGE} alt="Erik" /><div><b>@webbio</b><span>WEB DEVELOPER</span></div><strong>01 — 10</strong></div>
-          <div className="hero-side-note">DESIGN<br />DEVELOPMENT<br />MOTION<br />DETAIL</div>
-        </section>
-
+        <section className="hero-fiverr"><div className="hero-copy"><div className="micro"><span className="dot" /> AVAILABLE FOR PROJECTS <b>UNITED STATES</b></div><h1>WEB DESIGN<br /><em>& DEVELOPMENT</em><br />FOR PEOPLE<br />WHO <span>CARE.</span></h1><p>I build clean, modern and conversion-focused websites for small businesses, freelancers and startups — with a strong visual direction and a fast frontend.</p><div className="hero-actions"><a className="pill primary" href="#contact">START A PROJECT <span>↗</span></a><a className="pill" href="#work">SEE MY WORK <span>↓</span></a></div></div><SpiralGallery /><div className="hero-profile"><img src={PROFILE_IMAGE} alt="Erik" /><div><b>@webbio</b><span>WEB DEVELOPER</span></div><strong>01 — 10</strong></div><div className="hero-side-note">DESIGN<br />DEVELOPMENT<br />MOTION<br />DETAIL</div></section>
         <Reveal className="trust-strip"><span>WHAT CLIENTS GET</span><b>DESIGN</b><i>×</i><b>DEVELOPMENT</b><i>×</i><b>RESPONSIVE</b><i>×</i><b>PERFORMANCE</b><i>×</i><b>SEO BASICS</b></Reveal>
-
-        <Reveal className="intro" id="about">
-          <div className="eyebrow">01 / ABOUT</div>
-          <div className="intro-main"><h2>I MAKE SMALL BUSINESSES <span>LOOK BIG.</span></h2><p>Hi, I’m Erik. I’m a web developer based in the United States. I focus on clean interfaces, responsive layouts and websites that are easy to understand, fast to use and ready to help a business grow.</p><div className="mini-facts"><span>US BASED</span><span>FREELANCE</span><span>WEB / UI</span><span>CREATIVE DEV</span></div></div>
-        </Reveal>
-
-        <section id="services" className="services-section">
-          <Reveal className="section-heading"><div className="eyebrow">02 / SERVICES</div><h2>WHAT I CAN<br /><span>BUILD FOR YOU.</span></h2></Reveal>
-          <div className="service-list">{services.map(([n, title, text]) => <Reveal className="service-row" key={n}><span>{n}</span><h3>{title}</h3><p>{text}</p><b>↗</b></Reveal>)}</div>
-        </section>
-
-        <section id="work" className="work-section">
-          <Reveal className="section-heading"><div className="eyebrow">03 / VISUAL REFERENCES</div><h2>THE KIND OF<br /><span>WORK I LIKE.</span></h2></Reveal>
-          <div className="work-grid">
-            {orbitCards.slice(0, 3).map((card, i) => <a className={`work-card ${i === 0 ? 'work-large' : ''}`} href="#contact" key={card.title}><img src={card.image} alt={card.title} loading="lazy" /><div><small>{String(i + 1).padStart(2, '0')} / {card.tag}</small><h3>{card.title}</h3><p>Visual direction, responsive structure and a polished frontend experience built around the client’s goal.</p></div></a>)}
-          </div>
-        </section>
-
+        <Reveal className="intro" id="about"><div className="eyebrow">01 / ABOUT</div><div className="intro-main"><h2>I MAKE SMALL BUSINESSES <span>LOOK BIG.</span></h2><p>Hi, I’m Erik. I’m a web developer based in the United States. I focus on clean interfaces, responsive layouts and websites that are easy to understand, fast to use and ready to help a business grow.</p><div className="mini-facts"><span>US BASED</span><span>FREELANCE</span><span>WEB / UI</span><span>CREATIVE DEV</span></div></div></Reveal>
+        <section id="services" className="services-section"><Reveal className="section-heading"><div className="eyebrow">02 / SERVICES</div><h2>WHAT I CAN<br /><span>BUILD FOR YOU.</span></h2></Reveal><div className="service-list">{services.map(([n, title, text]) => <Reveal className="service-row" key={n}><span>{n}</span><h3>{title}</h3><p>{text}</p><b>↗</b></Reveal>)}</div></section>
+        <section id="work" className="work-section"><Reveal className="section-heading"><div className="eyebrow">03 / VISUAL REFERENCES</div><h2>THE KIND OF<br /><span>WORK I LIKE.</span></h2></Reveal><div className="work-grid">{orbitCards.slice(0, 3).map((card, i) => <a className={`work-card ${i === 0 ? 'work-large' : ''}`} href="#contact" key={card.title}><img src={card.image} alt={card.title} loading="lazy" /><div><small>{String(i + 1).padStart(2, '0')} / {card.tag}</small><h3>{card.title}</h3><p>Visual direction, responsive structure and a polished frontend experience built around the client’s goal.</p></div></a>)}</div></section>
         <Reveal className="process"><div className="eyebrow">04 / HOW I WORK</div><div className="process-grid"><div><span>01</span><h3>UNDERSTAND</h3><p>Define the goal, audience, content and visual direction before building.</p></div><div><span>02</span><h3>DESIGN</h3><p>Turn the idea into a clear layout, responsive system and visual language.</p></div><div><span>03</span><h3>BUILD</h3><p>Develop the site, test it across screen sizes and polish the details.</p></div><div><span>04</span><h3>LAUNCH</h3><p>Deliver a finished website ready to show customers and clients.</p></div></div></Reveal>
-
         <Reveal className="skills-section"><div className="eyebrow">05 / SKILLS & TOOLS</div><h2>THE TOOLS<br /><span>BEHIND THE WORK.</span></h2><div className="skill-cloud">{stack.map((item) => <span key={item}>{item}</span>)}</div></Reveal>
-
         <section id="contact" className="contact-section"><Reveal><div className="eyebrow">06 / CONTACT</div><h2>HAVE A WEBSITE<br />IN <span>MIND?</span></h2><p>Tell me what you need. I’ll help turn the idea into a clean, modern web experience.</p><a className="contact-button" href="https://www.fiverr.com/">START A PROJECT <span>↗</span></a></Reveal></section>
       </main>
-
-      <footer><b>W®</b><span>ERIK / WEB DEVELOPER</span><span>UNITED STATES / 2026</span><a href="https://github.com/b-1-o/my-">GITHUB ↗</a></footer>
+      <footer><b>W®</b><span>ERIK / WEB DEVELOPER</span><span>UNITED STATES / 2026</span><a href="https://github.com/b-1-o/my">GITHUB ↗</a></footer>
     </>
   )
 }
