@@ -31,23 +31,26 @@ const stack = ['HTML', 'CSS', 'JavaScript', 'React', 'Next.js', 'TypeScript', 'G
 
 function SpiralGallery() {
   const scene = useRef<HTMLDivElement>(null)
-  const stage = useRef<HTMLDivElement>(null)
-  const target = useRef(-22)
-  const current = useRef(-22)
+  const cardsRef = useRef<HTMLDivElement[]>([])
+  const phaseTarget = useRef(0)
+  const phaseCurrent = useRef(0)
   const pointer = useRef({ active: false, lastY: 0 })
+  const total = orbitCards.length
 
   useEffect(() => {
     const root = scene.current
     if (!root) return
-    let frame = 0
 
-    const addRotation = (amount: number) => {
-      target.current += amount
+    let frame = 0
+    const cards = cardsRef.current.filter(Boolean)
+
+    const addPhase = (amount: number) => {
+      phaseTarget.current += amount
     }
 
     const onWheel = (event: WheelEvent) => {
       event.preventDefault()
-      addRotation(event.deltaY * 0.46)
+      addPhase(event.deltaY * 0.012)
     }
 
     const onPointerDown = (event: PointerEvent) => {
@@ -61,18 +64,40 @@ function SpiralGallery() {
       event.preventDefault()
       const delta = pointer.current.lastY - event.clientY
       pointer.current.lastY = event.clientY
-      addRotation(delta * 1.35)
+      addPhase(delta * 0.018)
     }
 
     const stopPointer = () => {
       pointer.current.active = false
     }
 
+    const wrap = (value: number) => ((value + total / 2) % total + total) % total - total / 2
+
     const tick = () => {
-      current.current += (target.current - current.current) * 0.09
-      if (stage.current) {
-        stage.current.style.setProperty('--spiral-rotation', `${current.current}deg`)
-      }
+      phaseCurrent.current += (phaseTarget.current - phaseCurrent.current) * 0.11
+      const phase = phaseCurrent.current
+
+      cards.forEach((card, index) => {
+        const slot = wrap(index - phase)
+        const abs = Math.abs(slot)
+        const angle = -16 + slot * 38
+        const lift = slot * 86
+        const radius = 305 + Math.cos(slot * 0.88) * 24
+        const scale = 1 - Math.min(abs * 0.035, 0.22)
+        const opacity = Math.max(0, 1 - Math.max(0, abs - 2.1) * 0.3)
+        const blur = Math.max(0, abs - 2.2) * 2.6
+        const tilt = slot * -1.35
+
+        card.style.setProperty('--slot', `${slot}`)
+        card.style.setProperty('--angle', `${angle}deg`)
+        card.style.setProperty('--lift', `${lift}px`)
+        card.style.setProperty('--radius', `${radius}px`)
+        card.style.setProperty('--scale', `${scale}`)
+        card.style.setProperty('--alpha', `${opacity}`)
+        card.style.setProperty('--blur', `${blur}px`)
+        card.style.setProperty('--tilt', `${tilt}deg`)
+      })
+
       frame = requestAnimationFrame(tick)
     }
 
@@ -93,20 +118,15 @@ function SpiralGallery() {
     }
   }, [])
 
-  const repeatedCards = Array.from({ length: 30 }, (_, i) => {
-    const index = ((i % orbitCards.length) + orbitCards.length) % orbitCards.length
-    return { ...orbitCards[index], index, copy: i }
-  })
-
   return (
     <>
       <style>{`
         .spiral-scene{position:absolute;inset:0 0 0 16%;perspective:1800px;overflow:hidden;cursor:ns-resize;touch-action:none;user-select:none;z-index:5;}
-        .spiral-scene:before{content:"";position:absolute;left:49%;top:50%;width:64%;height:94%;transform:translate(-50%,-50%);background:radial-gradient(ellipse at center,rgba(255,255,255,.13) 0%,rgba(140,155,255,.07) 28%,transparent 68%);filter:blur(30px);pointer-events:none;}
-        .spiral-axis{position:absolute;left:57%;top:9%;width:1px;height:82%;background:linear-gradient(to bottom,transparent,rgba(255,255,255,.11) 14%,rgba(255,255,255,.17) 50%,rgba(255,255,255,.11) 86%,transparent);box-shadow:0 0 30px rgba(255,255,255,.12);opacity:.72;pointer-events:none;}
-        .spiral-stage{position:absolute;left:57%;top:50%;width:860px;height:860px;transform-style:preserve-3d;transform:translate(-50%,-50%) rotateX(-4deg) rotateY(-8deg);will-change:transform;}
-        .spiral-track{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateY(var(--spiral-rotation,-22deg));will-change:transform;}
-        .spiral-card{--angle:0deg;--lift:0px;--radius:318px;--tilt:0deg;position:absolute;left:50%;top:50%;width:282px;height:176px;margin:-88px 0 0 -141px;padding:7px;border:1px solid rgba(255,255,255,.26);border-radius:20px;background:linear-gradient(145deg,rgba(255,255,255,.17),rgba(255,255,255,.04));box-shadow:0 36px 92px rgba(0,0,0,.56),inset 0 1px rgba(255,255,255,.28);backdrop-filter:blur(18px) saturate(145%);-webkit-backdrop-filter:blur(18px) saturate(145%);transform-style:preserve-3d;transform:rotateY(var(--angle)) translateZ(var(--radius)) translateY(var(--lift)) rotateY(calc(var(--angle) * -1)) rotateZ(var(--tilt));}
+        .spiral-scene:before{content:"";position:absolute;left:50%;top:50%;width:66%;height:94%;transform:translate(-50%,-50%);background:radial-gradient(ellipse at center,rgba(255,255,255,.13) 0%,rgba(140,155,255,.07) 28%,transparent 68%);filter:blur(30px);pointer-events:none;}
+        .spiral-axis{position:absolute;left:57%;top:7%;width:1px;height:86%;background:linear-gradient(to bottom,transparent,rgba(255,255,255,.11) 14%,rgba(255,255,255,.17) 50%,rgba(255,255,255,.11) 86%,transparent);box-shadow:0 0 30px rgba(255,255,255,.12);opacity:.72;pointer-events:none;}
+        .spiral-stage{position:absolute;left:57%;top:50%;width:900px;height:900px;transform:translate(-50%,-50%) rotateX(-4deg) rotateY(-8deg);transform-style:preserve-3d;}
+        .spiral-track{position:absolute;inset:0;transform-style:preserve-3d;}
+        .spiral-card{--angle:0deg;--lift:0px;--radius:305px;--tilt:0deg;--scale:1;--alpha:1;--blur:0px;position:absolute;left:50%;top:50%;width:282px;height:176px;margin:-88px 0 0 -141px;padding:7px;border:1px solid rgba(255,255,255,.26);border-radius:20px;background:linear-gradient(145deg,rgba(255,255,255,.17),rgba(255,255,255,.04));box-shadow:0 36px 92px rgba(0,0,0,.56),inset 0 1px rgba(255,255,255,.28);backdrop-filter:blur(18px) saturate(145%);-webkit-backdrop-filter:blur(18px) saturate(145%);transform-style:preserve-3d;transform:rotateY(var(--angle)) translateZ(var(--radius)) translateY(var(--lift)) rotateY(calc(var(--angle) * -1)) rotateZ(var(--tilt)) scale(var(--scale));opacity:var(--alpha);filter:blur(var(--blur));will-change:transform,opacity,filter;}
         .spiral-card:before{content:"";position:absolute;inset:0;border-radius:20px;background:linear-gradient(120deg,rgba(255,255,255,.16),transparent 24%,transparent 72%,rgba(255,255,255,.05));pointer-events:none;z-index:3;}
         .spiral-card:after{content:"";position:absolute;inset:-1px;border-radius:21px;padding:1px;background:linear-gradient(125deg,rgba(255,255,255,.72),transparent 25%,transparent 69%,rgba(255,255,255,.12));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;z-index:6;}
         .spiral-image{position:absolute;inset:7px;overflow:hidden;border-radius:13px;background:#101013;}
@@ -117,46 +137,39 @@ function SpiralGallery() {
         .spiral-copy{position:absolute;left:19px;right:19px;bottom:17px;z-index:4;display:flex;flex-direction:column;color:#fff;text-shadow:0 2px 20px #000;}
         .spiral-copy small{font:7px 'DM Mono';letter-spacing:.15em;color:#c8c8c8;margin-bottom:2px;}
         .spiral-copy strong{font:600 21px 'Space Grotesk';letter-spacing:-.07em;}
-        .spiral-trace{position:absolute;left:50%;top:50%;width:500px;height:620px;margin:-310px 0 0 -250px;border:1px solid rgba(255,255,255,.045);border-radius:50%;transform:rotateX(76deg) rotateZ(24deg);box-shadow:0 0 72px rgba(255,255,255,.03);pointer-events:none;}
-        .spiral-edge{position:absolute;left:0;right:0;height:24%;z-index:8;pointer-events:none;}
-        .spiral-edge.top{top:-2%;background:linear-gradient(to bottom,rgba(7,7,7,.92) 0%,rgba(7,7,7,.54) 34%,rgba(7,7,7,0) 100%);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);mask-image:linear-gradient(to bottom,#000 0%,#000 42%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 42%,transparent 100%);}
-        .spiral-edge.bottom{bottom:-2%;background:linear-gradient(to top,rgba(7,7,7,.92) 0%,rgba(7,7,7,.54) 34%,rgba(7,7,7,0) 100%);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);mask-image:linear-gradient(to top,#000 0%,#000 42%,transparent 100%);-webkit-mask-image:linear-gradient(to top,#000 0%,#000 42%,transparent 100%);}
+        .spiral-trace{position:absolute;left:50%;top:50%;width:510px;height:650px;margin:-325px 0 0 -255px;border:1px solid rgba(255,255,255,.045);border-radius:50%;transform:rotateX(76deg) rotateZ(24deg);box-shadow:0 0 72px rgba(255,255,255,.03);pointer-events:none;}
+        .spiral-edge{position:absolute;left:0;right:0;height:25%;z-index:8;pointer-events:none;}
+        .spiral-edge.top{top:-2%;background:linear-gradient(to bottom,rgba(7,7,7,.94) 0%,rgba(7,7,7,.58) 34%,rgba(7,7,7,0) 100%);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);mask-image:linear-gradient(to bottom,#000 0%,#000 40%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 40%,transparent 100%);}
+        .spiral-edge.bottom{bottom:-2%;background:linear-gradient(to top,rgba(7,7,7,.94) 0%,rgba(7,7,7,.58) 34%,rgba(7,7,7,0) 100%);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);mask-image:linear-gradient(to top,#000 0%,#000 40%,transparent 100%);-webkit-mask-image:linear-gradient(to top,#000 0%,#000 40%,transparent 100%);}
         .spiral-hint{position:absolute;right:4vw;bottom:5vh;z-index:10;display:flex;align-items:center;gap:9px;padding:10px 13px;border:1px solid rgba(255,255,255,.1);border-radius:999px;background:rgba(255,255,255,.035);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);color:#777;font:8px 'DM Mono';}
         .spiral-hint i{width:6px;height:6px;border-radius:50%;background:#d8ff63;box-shadow:0 0 12px #d8ff63;}
         .spiral-hint b{color:#efefef;font-weight:500;margin-left:7px;}
         .spiral-hint em{font-style:normal;color:#555;}
-        @media(max-width:1100px){.spiral-scene{inset:0;}.spiral-stage{left:61%;transform:translate(-50%,-50%) rotateX(-4deg) rotateY(-6deg) scale(.84);}.spiral-axis{left:61%;}.spiral-trace{left:50%;}.spiral-card{width:258px;height:161px;margin:-80px 0 0 -129px;--radius:290px;}.spiral-hint{right:22px;bottom:22px;}}
-        @media(max-width:760px){.spiral-scene{top:40%;height:60%;}.spiral-stage{left:58%;top:52%;width:680px;height:720px;transform:translate(-50%,-50%) rotateX(-2deg) rotateY(-4deg) scale(.58);}.spiral-axis{left:58%;top:6%;height:88%;}.spiral-trace{display:none;}.spiral-card{width:234px;height:147px;margin:-73px 0 0 -117px;--radius:235px;}.spiral-edge{height:29%;}.spiral-hint{left:50%;right:auto;bottom:18px;transform:translateX(-50%);white-space:nowrap;font-size:7px;}.hero-copy{z-index:20;}.hero-profile{z-index:30;}}
-        @media(max-width:480px){.spiral-scene{top:41%;height:59%;}.spiral-stage{left:56%;top:53%;width:650px;height:710px;transform:translate(-50%,-50%) rotateX(-2deg) rotateY(-3deg) scale(.49);}.spiral-axis{left:56%;}.spiral-card{width:220px;height:139px;margin:-69px 0 0 -110px;--radius:202px;}.spiral-edge{height:31%;}.spiral-copy strong{font-size:19px;}.spiral-hint{bottom:14px;}.hero-profile strong{display:none;}.hero-copy p{max-width:295px;}}
+        @media(max-width:1100px){.spiral-scene{inset:0;}.spiral-stage{left:61%;transform:translate(-50%,-50%) rotateX(-4deg) rotateY(-6deg) scale(.84);}.spiral-axis{left:61%;}.spiral-trace{left:50%;}.spiral-card{width:258px;height:161px;margin:-80px 0 0 -129px;}.spiral-hint{right:22px;bottom:22px;}}
+        @media(max-width:760px){.spiral-scene{top:40%;height:60%;}.spiral-stage{left:58%;top:52%;width:700px;height:760px;transform:translate(-50%,-50%) rotateX(-2deg) rotateY(-4deg) scale(.58);}.spiral-axis{left:58%;top:6%;height:88%;}.spiral-trace{display:none;}.spiral-card{width:234px;height:147px;margin:-73px 0 0 -117px;}.spiral-edge{height:30%;}.spiral-hint{left:50%;right:auto;bottom:18px;transform:translateX(-50%);white-space:nowrap;font-size:7px;}.hero-copy{z-index:20;}.hero-profile{z-index:30;}}
+        @media(max-width:480px){.spiral-scene{top:41%;height:59%;}.spiral-stage{left:56%;top:53%;width:680px;height:740px;transform:translate(-50%,-50%) rotateX(-2deg) rotateY(-3deg) scale(.49);}.spiral-axis{left:56%;}.spiral-card{width:220px;height:139px;margin:-69px 0 0 -110px;}.spiral-edge{height:32%;}.spiral-copy strong{font-size:19px;}.spiral-hint{bottom:14px;}.hero-profile strong{display:none;}.hero-copy p{max-width:295px;}}
       `}</style>
       <div ref={scene} className="spiral-scene" aria-label="Infinite interactive 3D spiral carousel. Scroll or drag inside to rotate.">
         <div className="spiral-axis" />
         <div className="spiral-trace" />
-        <div ref={stage} className="spiral-stage">
+        <div className="spiral-stage">
           <div className="spiral-track">
-            {repeatedCards.map((card, i) => {
-              const center = (repeatedCards.length - 1) / 2
-              const position = i - center
-              const angle = position * 37
-              const lift = position * 72
-              const tilt = position * -1.2
-              const depth = 310 + Math.cos((position / 3.8) * Math.PI) * 24
-              return (
-                <article
-                  className="spiral-card"
-                  key={`${card.title}-${i}`}
-                  style={{ '--angle': `${angle}deg`, '--lift': `${lift}px`, '--tilt': `${tilt}deg`, '--radius': `${depth}px` } as CSSProperties}
-                >
-                  <div className="spiral-image"><img src={card.image} alt={card.title} loading={i < 12 ? 'eager' : 'lazy'} /><span className="spiral-number">{String(card.index + 1).padStart(2, '0')}</span></div>
-                  <div className="spiral-copy"><small>{card.tag}</small><strong>{card.title}</strong></div>
-                </article>
-              )
-            })}
+            {orbitCards.map((card, i) => (
+              <article
+                key={card.title}
+                ref={(node) => { if (node) cardsRef.current[i] = node }}
+                className="spiral-card"
+                style={{ '--angle': `${-16 + i * 38}deg`, '--lift': `${i * 86}px` } as CSSProperties}
+              >
+                <div className="spiral-image"><img src={card.image} alt={card.title} loading={i < 6 ? 'eager' : 'lazy'} /><span className="spiral-number">{String(i + 1).padStart(2, '0')}</span></div>
+                <div className="spiral-copy"><small>{card.tag}</small><strong>{card.title}</strong></div>
+              </article>
+            ))}
           </div>
         </div>
         <div className="spiral-edge top" />
         <div className="spiral-edge bottom" />
-        <div className="spiral-hint"><i /> SCROLL / DRAG <b>∞</b><em> CYCLIC</em></div>
+        <div className="spiral-hint"><i /> SCROLL / DRAG <b>∞</b><em> ONE BY ONE</em></div>
       </div>
     </>
   )
