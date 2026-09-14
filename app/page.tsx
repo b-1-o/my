@@ -1,20 +1,21 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 
 const PROFILE_IMAGE = 'https://fiverr-res.cloudinary.com/t_profile_thumb,q_auto,f_auto/attachments/profile/photo/49d31e9662d2d97d97e08ae40327fe00-1789350656264/060a52f2-b6e4-431a-bcc0-8b814c764ec9.jpeg'
-const RAW = 'https://raw.githubusercontent.com/b-1-o/my-/main/'
+const REFS = 'https://raw.githubusercontent.com/b-1-o/refs/main/'
 
 const orbitCards = [
-  { title: 'LANDING PAGES', tag: 'WEB', tone: 'light', image: `${RAW}skate-01.jpg` },
-  { title: 'BUSINESS WEBSITES', tag: 'WEB', tone: 'dark', image: `${RAW}skate-02.jpg` },
-  { title: 'WEBSITE REDESIGN', tag: 'REDESIGN', tone: 'paper', image: `${RAW}skate-03.jpg` },
-  { title: 'RESPONSIVE UI', tag: 'UI / UX', tone: 'blue', image: `${RAW}skate-04.jpg` },
-  { title: 'ROYAL TOUCH', tag: 'CLIENT PROJECT', tone: 'gold', image: `${RAW}skate-05.jpg` },
-  { title: 'BIO / GOTH', tag: 'REACT / MOTION', tone: 'dark', image: `${RAW}skate-06.jpg` },
-  { title: 'PRODUCT VISUALS', tag: 'E-COMMERCE', tone: 'paper', image: `${RAW}skate-07.jpg` },
-  { title: 'FAST + MOBILE', tag: 'PERFORMANCE', tone: 'light', image: `${RAW}skate-08.jpg` },
-  { title: 'B1O EXPERIMENTS', tag: 'CREATIVE DEV', tone: 'blue', image: `${RAW}skate-09.jpg` },
+  { title: 'GRAPHIC DESIGN', tag: 'VISUAL', image: `${REFS}01-graphic-designer.png` },
+  { title: 'BUSINESS', tag: 'WEB', image: `${REFS}02-business-consultant.png` },
+  { title: 'FOOD & BRAND', tag: 'LANDING', image: `${REFS}03-pastry-chef.png` },
+  { title: 'PHOTOGRAPHY', tag: 'PORTFOLIO', image: `${REFS}04-photographer.png` },
+  { title: 'LAW FIRM', tag: 'BUSINESS WEB', image: `${REFS}05-law-firm.png` },
+  { title: 'FITNESS', tag: 'SERVICE', image: `${REFS}06-fitness-coach.png` },
+  { title: 'RESTAURANT', tag: 'HOSPITALITY', image: `${REFS}07-restaurant.png` },
+  { title: 'ARCHITECTURE', tag: 'EDITORIAL', image: `${REFS}08-architect.png` },
+  { title: 'TECH STARTUP', tag: 'PRODUCT', image: `${REFS}09-tech-startup.png` },
+  { title: 'FLORIST', tag: 'E-COMMERCE', image: `${REFS}10-florist.png` },
 ]
 
 const services = [
@@ -36,10 +37,10 @@ function SpiralGallery() {
   useEffect(() => {
     let frame = 0
     const onMove = (event: MouseEvent) => {
-      target.current.x = (event.clientX / window.innerWidth - 0.5) * 18
-      target.current.y = (event.clientY / window.innerHeight - 0.5) * 12
+      target.current.x = (event.clientX / window.innerWidth - 0.5) * 20
+      target.current.y = (event.clientY / window.innerHeight - 0.5) * 14
     }
-    const onScroll = () => { target.current.scroll = window.scrollY * 0.055 }
+    const onScroll = () => { target.current.scroll = window.scrollY * 0.045 }
     const tick = () => {
       current.current.x += (target.current.x - current.current.x) * 0.055
       current.current.y += (target.current.y - current.current.y) * 0.055
@@ -62,27 +63,25 @@ function SpiralGallery() {
   }, [])
 
   return (
-    <div className="spiral-scene" aria-label="Interactive showcase of Erik's services and projects">
+    <div className="spiral-scene" aria-label="Interactive portfolio gallery">
       <div className="spiral-glow" />
       <div className="spiral-floor" />
       <div ref={stage} className="spiral-stage">
         {orbitCards.map((card, i) => {
           const angle = (i / orbitCards.length) * 360
-          const lift = (i - (orbitCards.length - 1) / 2) * 42
+          const lift = Math.sin((i / orbitCards.length) * Math.PI * 2) * 110
+          const depth = 270 + Math.cos((i / orbitCards.length) * Math.PI * 2) * 80
           return (
             <article
-              className={`orbit-card ${card.tone}`}
+              className="orbit-card"
               key={card.title}
-              style={{ '--angle': `${angle}deg`, '--lift': `${lift}px` } as React.CSSProperties}
+              style={{ '--angle': `${angle}deg`, '--lift': `${lift}px`, '--depth': `${depth}px` } as CSSProperties}
             >
               <div className="orbit-image">
-                <img src={card.image} alt="" />
+                <img src={card.image} alt={card.title} loading={i < 4 ? 'eager' : 'lazy'} />
                 <span>{String(i + 1).padStart(2, '0')}</span>
               </div>
-              <div className="orbit-copy">
-                <small>{card.tag}</small>
-                <strong>{card.title}</strong>
-              </div>
+              <div className="orbit-copy"><small>{card.tag}</small><strong>{card.title}</strong></div>
             </article>
           )
         })}
@@ -92,12 +91,12 @@ function SpiralGallery() {
           <small>WEB DEVELOPER / UI DESIGNER</small>
         </div>
       </div>
-      <div className="spiral-hint"><span>DRAG WITH YOUR EYES</span><i>↻</i><span>SCROLL TO ROTATE</span></div>
+      <div className="spiral-hint"><span>MOVE</span><i>↻</i><span>SCROLL TO ROTATE</span></div>
     </div>
   )
 }
 
-function Reveal({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+function Reveal({ children, className = '' }: { children: ReactNode; className?: string }) {
   return <div className={`reveal ${className}`}>{children}</div>
 }
 
@@ -123,11 +122,7 @@ export default function Home() {
       <div className="progress" style={{ width: `${progress}%` }} />
       <header className="topbar">
         <a href="#top" className="brand">W<span>®</span></a>
-        <nav>
-          <a href="#services">Services</a>
-          <a href="#work">Work</a>
-          <a href="#about">About</a>
-        </nav>
+        <nav><a href="#services">Services</a><a href="#work">Work</a><a href="#about">About</a></nav>
         <a href="#contact" className="top-cta">GET IN TOUCH <span>↗</span></a>
       </header>
 
@@ -136,74 +131,38 @@ export default function Home() {
           <div className="hero-copy">
             <div className="micro"><span className="dot" /> AVAILABLE FOR PROJECTS <b>UNITED STATES</b></div>
             <h1>WEB DESIGN<br /><em>& DEVELOPMENT</em><br />FOR PEOPLE<br />WHO <span>CARE.</span></h1>
-            <p>I build clean, modern and conversion-focused websites for small businesses, freelancers and startups — without the agency price tag.</p>
-            <div className="hero-actions">
-              <a className="pill primary" href="#contact">START A PROJECT <span>↗</span></a>
-              <a className="pill" href="#work">SEE MY WORK <span>↓</span></a>
-            </div>
+            <p>I build clean, modern and conversion-focused websites for small businesses, freelancers and startups — with a strong visual direction and a fast frontend.</p>
+            <div className="hero-actions"><a className="pill primary" href="#contact">START A PROJECT <span>↗</span></a><a className="pill" href="#work">SEE MY WORK <span>↓</span></a></div>
           </div>
           <SpiralGallery />
-          <div className="hero-profile">
-            <img src={PROFILE_IMAGE} alt="Erik" />
-            <div><b>@webbio</b><span>WEB DEVELOPER</span></div>
-            <strong>01 — 06</strong>
-          </div>
-          <div className="hero-side-note">CLEAN CODE<br />GOOD PERFORMANCE<br />MOBILE FIRST</div>
+          <div className="hero-profile"><img src={PROFILE_IMAGE} alt="Erik" /><div><b>@webbio</b><span>WEB DEVELOPER</span></div><strong>01 — 06</strong></div>
+          <div className="hero-side-note">DESIGN<br />DEVELOPMENT<br />MOTION<br />DETAIL</div>
         </section>
 
-        <Reveal className="trust-strip">
-          <span>WHAT CLIENTS GET</span><b>DESIGN</b><i>×</i><b>DEVELOPMENT</b><i>×</i><b>RESPONSIVE</b><i>×</i><b>PERFORMANCE</b><i>×</i><b>SEO BASICS</b>
-        </Reveal>
+        <Reveal className="trust-strip"><span>WHAT CLIENTS GET</span><b>DESIGN</b><i>×</i><b>DEVELOPMENT</b><i>×</i><b>RESPONSIVE</b><i>×</i><b>PERFORMANCE</b><i>×</i><b>SEO BASICS</b></Reveal>
 
         <Reveal className="intro" id="about">
           <div className="eyebrow">01 / ABOUT</div>
-          <div className="intro-main">
-            <h2>I MAKE SMALL BUSINESSES <span>LOOK BIG.</span></h2>
-            <p>Hi, I’m Erik. I’m a web developer based in the United States. I focus on clean interfaces, responsive layouts and websites that are easy to understand, fast to use and ready to help a business grow.</p>
-            <div className="mini-facts"><span>US BASED</span><span>ENGLISH</span><span>FREELANCE</span><span>WEB / UI</span></div>
-          </div>
+          <div className="intro-main"><h2>I MAKE SMALL BUSINESSES <span>LOOK BIG.</span></h2><p>Hi, I’m Erik. I’m a web developer based in the United States. I focus on clean interfaces, responsive layouts and websites that are easy to understand, fast to use and ready to help a business grow.</p><div className="mini-facts"><span>US BASED</span><span>FREELANCE</span><span>WEB / UI</span><span>CREATIVE DEV</span></div></div>
         </Reveal>
 
         <section id="services" className="services-section">
           <Reveal className="section-heading"><div className="eyebrow">02 / SERVICES</div><h2>WHAT I CAN<br /><span>BUILD FOR YOU.</span></h2></Reveal>
-          <div className="service-list">
-            {services.map(([n, title, text]) => <Reveal className="service-row" key={n}><span>{n}</span><h3>{title}</h3><p>{text}</p><b>↗</b></Reveal>)}
-          </div>
+          <div className="service-list">{services.map(([n, title, text]) => <Reveal className="service-row" key={n}><span>{n}</span><h3>{title}</h3><p>{text}</p><b>↗</b></Reveal>)}</div>
         </section>
 
         <section id="work" className="work-section">
-          <Reveal className="section-heading"><div className="eyebrow">03 / SELECTED WORK</div><h2>PROJECTS<br /><span>FROM MY WORKBENCH.</span></h2></Reveal>
+          <Reveal className="section-heading"><div className="eyebrow">03 / VISUAL REFERENCES</div><h2>THE KIND OF<br /><span>WORK I LIKE.</span></h2></Reveal>
           <div className="work-grid">
-            <a className="work-card work-large" href="#contact"><img src={`${RAW}skate-01.jpg`} alt="Royal Touch project" /><div><small>01 / WEB DESIGN + DEVELOPMENT</small><h3>ROYAL TOUCH</h3><p>Premium mobile car wash website with a strong visual identity and service-first structure.</p></div></a>
-            <a className="work-card" href="#contact"><img src={`${RAW}skate-02.jpg`} alt="B1O project" /><div><small>02 / INTERACTIVE UI</small><h3>B1O</h3><p>Experimental personal digital interface and creative development work.</p></div></a>
-            <a className="work-card" href="#contact"><img src={`${RAW}skate-03.jpg`} alt="Product design project" /><div><small>03 / E-COMMERCE VISUALS</small><h3>PRODUCT DESIGN</h3><p>Marketplace visuals and product-card concepts designed to feel clear and premium.</p></div></a>
+            {orbitCards.slice(0, 3).map((card, i) => <a className={`work-card ${i === 0 ? 'work-large' : ''}`} href="#contact" key={card.title}><img src={card.image} alt={card.title} loading="lazy" /><div><small>{String(i + 1).padStart(2, '0')} / {card.tag}</small><h3>{card.title}</h3><p>Visual direction, responsive structure and a polished frontend experience built around the client’s goal.</p></div></a>)}
           </div>
         </section>
 
-        <Reveal className="process">
-          <div className="eyebrow">04 / HOW I WORK</div>
-          <div className="process-grid">
-            <div><span>01</span><h3>UNDERSTAND</h3><p>We define the goal, audience, content and visual direction before building.</p></div>
-            <div><span>02</span><h3>DESIGN</h3><p>I turn the idea into a clear layout, responsive system and polished visual language.</p></div>
-            <div><span>03</span><h3>BUILD</h3><p>I develop the site, test it across screen sizes and clean up the details.</p></div>
-            <div><span>04</span><h3>LAUNCH</h3><p>You get a finished website that is ready to show customers and clients.</p></div>
-          </div>
-        </Reveal>
+        <Reveal className="process"><div className="eyebrow">04 / HOW I WORK</div><div className="process-grid"><div><span>01</span><h3>UNDERSTAND</h3><p>Define the goal, audience, content and visual direction before building.</p></div><div><span>02</span><h3>DESIGN</h3><p>Turn the idea into a clear layout, responsive system and visual language.</p></div><div><span>03</span><h3>BUILD</h3><p>Develop the site, test it across screen sizes and polish the details.</p></div><div><span>04</span><h3>LAUNCH</h3><p>Deliver a finished website ready to show customers and clients.</p></div></div></Reveal>
 
-        <Reveal className="skills-section">
-          <div className="eyebrow">05 / SKILLS & TOOLS</div>
-          <h2>THE TOOLS<br /><span>BEHIND THE WORK.</span></h2>
-          <div className="skill-cloud">{stack.map((item) => <span key={item}>{item}</span>)}</div>
-        </Reveal>
+        <Reveal className="skills-section"><div className="eyebrow">05 / SKILLS & TOOLS</div><h2>THE TOOLS<br /><span>BEHIND THE WORK.</span></h2><div className="skill-cloud">{stack.map((item) => <span key={item}>{item}</span>)}</div></Reveal>
 
-        <section id="contact" className="contact-section">
-          <Reveal>
-            <div className="eyebrow">06 / CONTACT</div>
-            <h2>HAVE A WEBSITE<br />IN <span>MIND?</span></h2>
-            <p>Tell me what you need. I’ll help turn the idea into a clean, modern web experience.</p>
-            <a className="contact-button" href="mailto:hello@erik.dev">GET IN TOUCH <span>↗</span></a>
-          </Reveal>
-        </section>
+        <section id="contact" className="contact-section"><Reveal><div className="eyebrow">06 / CONTACT</div><h2>HAVE A WEBSITE<br />IN <span>MIND?</span></h2><p>Tell me what you need. I’ll help turn the idea into a clean, modern web experience.</p><a className="contact-button" href="https://www.fiverr.com/">START A PROJECT <span>↗</span></a></Reveal></section>
       </main>
 
       <footer><b>W®</b><span>ERIK / WEB DEVELOPER</span><span>UNITED STATES / 2026</span><a href="https://github.com/b-1-o/my-">GITHUB ↗</a></footer>
