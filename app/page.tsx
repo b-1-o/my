@@ -31,7 +31,7 @@ const stack = ['HTML', 'CSS', 'JavaScript', 'React', 'Next.js', 'TypeScript', 'G
 
 function SpiralGallery() {
   const scene = useRef<HTMLDivElement>(null)
-  const cardsRef = useRef<HTMLDivElement[]>([])
+  const cardsRef = useRef<HTMLElement[]>([])
   const phaseTarget = useRef(0)
   const phaseCurrent = useRef(0)
   const pointer = useRef({ active: false, lastY: 0 })
