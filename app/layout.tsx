@@ -21,7 +21,7 @@ const carouselScript = `
     let current = 0
     let frame = 0
     let pointerActive = false
-    let pointerLastY = 0
+    let pointerLastX = 0
 
     const wrap = (value) => ((value + total / 2) % total + total) % total - total / 2
 
@@ -64,7 +64,7 @@ const carouselScript = `
       event.preventDefault()
       event.stopImmediatePropagation()
       pointerActive = true
-      pointerLastY = event.clientY
+      pointerLastX = event.clientX
       scene.setPointerCapture?.(event.pointerId)
     }
 
@@ -72,8 +72,8 @@ const carouselScript = `
       if (!pointerActive) return
       event.preventDefault()
       event.stopImmediatePropagation()
-      const delta = pointerLastY - event.clientY
-      pointerLastY = event.clientY
+      const delta = pointerLastX - event.clientX
+      pointerLastX = event.clientX
       target += delta * 0.009
     }
 
@@ -153,10 +153,10 @@ const mobileCss = `
     width:720px;
     height:760px;
     z-index:2;
-    transform:translate(-50%,-50%) rotateX(-2deg) rotateY(-2deg) scale(.54);
+    transform:translate(-50%,-50%) rotateX(-2deg) rotateY(-2deg) scale(.60);
   }
   .spiral-track { position:absolute; inset:0; z-index:2; }
-  .spiral-card { width:234px; height:147px; margin:-73px 0 0 -117px; }
+  .spiral-card { width:250px; height:158px; margin:-79px 0 0 -125px; }
   .spiral-axis { left:50%; top:3%; height:94%; z-index:1; }
   .spiral-trace { display:none; }
   .spiral-edge { height:18%; z-index:8; }
@@ -173,9 +173,9 @@ const mobileCss = `
   .pill { padding:12px 15px; font-size:8px; }
   .pill span { margin-left:12px; }
   .spiral-scene { width:calc(100% + 32px); margin-left:-16px; margin-right:-16px; height:370px; min-height:370px; margin-top:12px; }
-  .spiral-stage { left:50%; top:50%; width:700px; height:740px; transform:translate(-50%,-50%) rotateX(-2deg) rotateY(-2deg) scale(.46); }
-  .spiral-card { width:220px; height:139px; margin:-69px 0 0 -110px; }
-  .spiral-copy strong { font-size:18px; }
+  .spiral-stage { left:50%; top:50%; width:700px; height:740px; transform:translate(-50%,-50%) rotateX(-2deg) rotateY(-2deg) scale(.52); }
+  .spiral-card { width:242px; height:153px; margin:-76px 0 0 -121px; }
+  .spiral-copy strong { font-size:19px; }
   .spiral-hint { bottom:8px; }
 }
 `
