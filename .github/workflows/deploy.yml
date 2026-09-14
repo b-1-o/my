@@ -36,6 +36,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Copy gallery assets into static export
+        run: cp -R assets out/assets
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
