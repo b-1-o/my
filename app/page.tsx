@@ -93,58 +93,70 @@ function SpiralGallery() {
     }
   }, [])
 
+  const repeatedCards = Array.from({ length: 30 }, (_, i) => {
+    const index = ((i % orbitCards.length) + orbitCards.length) % orbitCards.length
+    return { ...orbitCards[index], index, copy: i }
+  })
+
   return (
     <>
       <style>{`
         .spiral-scene{position:absolute;inset:0 0 0 16%;perspective:1800px;overflow:hidden;cursor:ns-resize;touch-action:none;user-select:none;z-index:5;}
-        .spiral-scene:before{content:"";position:absolute;left:48%;top:50%;width:62%;height:92%;transform:translate(-50%,-50%);background:radial-gradient(ellipse at center,rgba(255,255,255,.12) 0%,rgba(140,155,255,.065) 27%,transparent 66%);filter:blur(28px);pointer-events:none;}
-        .spiral-axis{position:absolute;left:57%;top:12%;width:1px;height:76%;background:linear-gradient(to bottom,transparent,rgba(255,255,255,.12) 18%,rgba(255,255,255,.16) 50%,rgba(255,255,255,.12) 82%,transparent);box-shadow:0 0 26px rgba(255,255,255,.12);opacity:.7;pointer-events:none;}
-        .spiral-stage{position:absolute;left:57%;top:50%;width:760px;height:760px;transform-style:preserve-3d;transform:translate(-50%,-50%) rotateX(-3deg) rotateY(-8deg);will-change:transform;}
+        .spiral-scene:before{content:"";position:absolute;left:49%;top:50%;width:64%;height:94%;transform:translate(-50%,-50%);background:radial-gradient(ellipse at center,rgba(255,255,255,.13) 0%,rgba(140,155,255,.07) 28%,transparent 68%);filter:blur(30px);pointer-events:none;}
+        .spiral-axis{position:absolute;left:57%;top:9%;width:1px;height:82%;background:linear-gradient(to bottom,transparent,rgba(255,255,255,.11) 14%,rgba(255,255,255,.17) 50%,rgba(255,255,255,.11) 86%,transparent);box-shadow:0 0 30px rgba(255,255,255,.12);opacity:.72;pointer-events:none;}
+        .spiral-stage{position:absolute;left:57%;top:50%;width:860px;height:860px;transform-style:preserve-3d;transform:translate(-50%,-50%) rotateX(-4deg) rotateY(-8deg);will-change:transform;}
         .spiral-track{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateY(var(--spiral-rotation,-22deg));will-change:transform;}
-        .spiral-card{--angle:0deg;--lift:0px;--radius:300px;--tilt:0deg;position:absolute;left:50%;top:50%;width:286px;height:178px;margin:-89px 0 0 -143px;padding:7px;border:1px solid rgba(255,255,255,.26);border-radius:20px;background:linear-gradient(145deg,rgba(255,255,255,.17),rgba(255,255,255,.04));box-shadow:0 36px 90px rgba(0,0,0,.56),inset 0 1px rgba(255,255,255,.28);backdrop-filter:blur(18px) saturate(145%);-webkit-backdrop-filter:blur(18px) saturate(145%);transform-style:preserve-3d;transform:rotateY(var(--angle)) translateZ(var(--radius)) translateY(var(--lift)) rotateY(calc(var(--angle) * -1)) rotateZ(var(--tilt));}
+        .spiral-card{--angle:0deg;--lift:0px;--radius:318px;--tilt:0deg;position:absolute;left:50%;top:50%;width:282px;height:176px;margin:-88px 0 0 -141px;padding:7px;border:1px solid rgba(255,255,255,.26);border-radius:20px;background:linear-gradient(145deg,rgba(255,255,255,.17),rgba(255,255,255,.04));box-shadow:0 36px 92px rgba(0,0,0,.56),inset 0 1px rgba(255,255,255,.28);backdrop-filter:blur(18px) saturate(145%);-webkit-backdrop-filter:blur(18px) saturate(145%);transform-style:preserve-3d;transform:rotateY(var(--angle)) translateZ(var(--radius)) translateY(var(--lift)) rotateY(calc(var(--angle) * -1)) rotateZ(var(--tilt));}
         .spiral-card:before{content:"";position:absolute;inset:0;border-radius:20px;background:linear-gradient(120deg,rgba(255,255,255,.16),transparent 24%,transparent 72%,rgba(255,255,255,.05));pointer-events:none;z-index:3;}
         .spiral-card:after{content:"";position:absolute;inset:-1px;border-radius:21px;padding:1px;background:linear-gradient(125deg,rgba(255,255,255,.72),transparent 25%,transparent 69%,rgba(255,255,255,.12));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;z-index:6;}
         .spiral-image{position:absolute;inset:7px;overflow:hidden;border-radius:13px;background:#101013;}
         .spiral-image img{display:block;width:100%;height:100%;object-fit:cover;opacity:.86;filter:saturate(.82) contrast(1.05);transition:transform .7s ease,opacity .35s ease;}
         .spiral-card:hover .spiral-image img{transform:scale(1.055);opacity:1;}
-        .spiral-image:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,4,6,0) 35%,rgba(4,4,6,.88) 100%);}
+        .spiral-image:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,4,6,0) 35%,rgba(4,4,6,.9) 100%);}
         .spiral-number{position:absolute;right:10px;top:10px;z-index:4;padding:5px 7px;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:rgba(0,0,0,.33);color:#fff;font:8px 'DM Mono';backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
         .spiral-copy{position:absolute;left:19px;right:19px;bottom:17px;z-index:4;display:flex;flex-direction:column;color:#fff;text-shadow:0 2px 20px #000;}
         .spiral-copy small{font:7px 'DM Mono';letter-spacing:.15em;color:#c8c8c8;margin-bottom:2px;}
         .spiral-copy strong{font:600 21px 'Space Grotesk';letter-spacing:-.07em;}
-        .spiral-trace{position:absolute;left:50%;top:50%;width:490px;height:560px;margin:-280px 0 0 -245px;border:1px solid rgba(255,255,255,.045);border-radius:50%;transform:rotateX(76deg) rotateZ(24deg);box-shadow:0 0 70px rgba(255,255,255,.03);pointer-events:none;}
+        .spiral-trace{position:absolute;left:50%;top:50%;width:500px;height:620px;margin:-310px 0 0 -250px;border:1px solid rgba(255,255,255,.045);border-radius:50%;transform:rotateX(76deg) rotateZ(24deg);box-shadow:0 0 72px rgba(255,255,255,.03);pointer-events:none;}
+        .spiral-edge{position:absolute;left:0;right:0;height:24%;z-index:8;pointer-events:none;}
+        .spiral-edge.top{top:-2%;background:linear-gradient(to bottom,rgba(7,7,7,.92) 0%,rgba(7,7,7,.54) 34%,rgba(7,7,7,0) 100%);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);mask-image:linear-gradient(to bottom,#000 0%,#000 42%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 42%,transparent 100%);}
+        .spiral-edge.bottom{bottom:-2%;background:linear-gradient(to top,rgba(7,7,7,.92) 0%,rgba(7,7,7,.54) 34%,rgba(7,7,7,0) 100%);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);mask-image:linear-gradient(to top,#000 0%,#000 42%,transparent 100%);-webkit-mask-image:linear-gradient(to top,#000 0%,#000 42%,transparent 100%);}
         .spiral-hint{position:absolute;right:4vw;bottom:5vh;z-index:10;display:flex;align-items:center;gap:9px;padding:10px 13px;border:1px solid rgba(255,255,255,.1);border-radius:999px;background:rgba(255,255,255,.035);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);color:#777;font:8px 'DM Mono';}
         .spiral-hint i{width:6px;height:6px;border-radius:50%;background:#d8ff63;box-shadow:0 0 12px #d8ff63;}
         .spiral-hint b{color:#efefef;font-weight:500;margin-left:7px;}
         .spiral-hint em{font-style:normal;color:#555;}
-        @media(max-width:1100px){.spiral-scene{inset:0;}.spiral-stage{left:61%;transform:translate(-50%,-50%) rotateX(-3deg) rotateY(-6deg) scale(.84);}.spiral-axis{left:61%;}.spiral-trace{left:50%;}.spiral-card{width:260px;height:163px;margin:-81px 0 0 -130px;}.spiral-hint{right:22px;bottom:22px;}}
-        @media(max-width:760px){.spiral-scene{top:40%;height:60%;}.spiral-stage{left:58%;top:52%;width:640px;height:680px;transform:translate(-50%,-50%) rotateX(-2deg) rotateY(-4deg) scale(.58);}.spiral-axis{left:58%;top:7%;height:86%;}.spiral-trace{display:none;}.spiral-card{width:238px;height:149px;margin:-74px 0 0 -119px;--radius:238px;}.spiral-hint{left:50%;right:auto;bottom:18px;transform:translateX(-50%);white-space:nowrap;font-size:7px;}.hero-copy{z-index:20;}.hero-profile{z-index:30;}}
-        @media(max-width:480px){.spiral-scene{top:41%;height:59%;}.spiral-stage{left:56%;top:53%;transform:translate(-50%,-50%) rotateX(-2deg) rotateY(-3deg) scale(.49);}.spiral-axis{left:56%;}.spiral-card{width:224px;height:141px;margin:-70px 0 0 -112px;--radius:205px;}.spiral-copy strong{font-size:19px;}.spiral-hint{bottom:14px;}.hero-profile strong{display:none;}.hero-copy p{max-width:295px;}}
+        @media(max-width:1100px){.spiral-scene{inset:0;}.spiral-stage{left:61%;transform:translate(-50%,-50%) rotateX(-4deg) rotateY(-6deg) scale(.84);}.spiral-axis{left:61%;}.spiral-trace{left:50%;}.spiral-card{width:258px;height:161px;margin:-80px 0 0 -129px;--radius:290px;}.spiral-hint{right:22px;bottom:22px;}}
+        @media(max-width:760px){.spiral-scene{top:40%;height:60%;}.spiral-stage{left:58%;top:52%;width:680px;height:720px;transform:translate(-50%,-50%) rotateX(-2deg) rotateY(-4deg) scale(.58);}.spiral-axis{left:58%;top:6%;height:88%;}.spiral-trace{display:none;}.spiral-card{width:234px;height:147px;margin:-73px 0 0 -117px;--radius:235px;}.spiral-edge{height:29%;}.spiral-hint{left:50%;right:auto;bottom:18px;transform:translateX(-50%);white-space:nowrap;font-size:7px;}.hero-copy{z-index:20;}.hero-profile{z-index:30;}}
+        @media(max-width:480px){.spiral-scene{top:41%;height:59%;}.spiral-stage{left:56%;top:53%;width:650px;height:710px;transform:translate(-50%,-50%) rotateX(-2deg) rotateY(-3deg) scale(.49);}.spiral-axis{left:56%;}.spiral-card{width:220px;height:139px;margin:-69px 0 0 -110px;--radius:202px;}.spiral-edge{height:31%;}.spiral-copy strong{font-size:19px;}.spiral-hint{bottom:14px;}.hero-profile strong{display:none;}.hero-copy p{max-width:295px;}}
       `}</style>
-      <div ref={scene} className="spiral-scene" aria-label="Interactive 3D spiral gallery. Scroll or drag inside to rotate.">
+      <div ref={scene} className="spiral-scene" aria-label="Infinite interactive 3D spiral carousel. Scroll or drag inside to rotate.">
         <div className="spiral-axis" />
         <div className="spiral-trace" />
         <div ref={stage} className="spiral-stage">
           <div className="spiral-track">
-            {orbitCards.map((card, i) => {
-              const center = (orbitCards.length - 1) / 2
-              const angle = (i - center) * 40
-              const lift = (i - center) * 76
-              const tilt = (i - center) * -1.3
+            {repeatedCards.map((card, i) => {
+              const center = (repeatedCards.length - 1) / 2
+              const position = i - center
+              const angle = position * 37
+              const lift = position * 72
+              const tilt = position * -1.2
+              const depth = 310 + Math.cos((position / 3.8) * Math.PI) * 24
               return (
                 <article
                   className="spiral-card"
-                  key={card.title}
-                  style={{ '--angle': `${angle}deg`, '--lift': `${lift}px`, '--tilt': `${tilt}deg` } as CSSProperties}
+                  key={`${card.title}-${i}`}
+                  style={{ '--angle': `${angle}deg`, '--lift': `${lift}px`, '--tilt': `${tilt}deg`, '--radius': `${depth}px` } as CSSProperties}
                 >
-                  <div className="spiral-image"><img src={card.image} alt={card.title} loading={i < 3 ? 'eager' : 'lazy'} /><span className="spiral-number">{String(i + 1).padStart(2, '0')}</span></div>
+                  <div className="spiral-image"><img src={card.image} alt={card.title} loading={i < 12 ? 'eager' : 'lazy'} /><span className="spiral-number">{String(card.index + 1).padStart(2, '0')}</span></div>
                   <div className="spiral-copy"><small>{card.tag}</small><strong>{card.title}</strong></div>
                 </article>
               )
             })}
           </div>
         </div>
-        <div className="spiral-hint"><i /> SCROLL / DRAG <b>01</b><em>/ 10</em></div>
+        <div className="spiral-edge top" />
+        <div className="spiral-edge bottom" />
+        <div className="spiral-hint"><i /> SCROLL / DRAG <b>∞</b><em> CYCLIC</em></div>
       </div>
     </>
   )
@@ -169,7 +181,7 @@ export default function Home() {
       <div className="progress" style={{ width: `${progress}%` }} />
       <header className="topbar"><a href="#top" className="brand">W<span>®</span></a><nav><a href="#services">Services</a><a href="#work">Work</a><a href="#about">About</a></nav><a href="#contact" className="top-cta">GET IN TOUCH <span>↗</span></a></header>
       <main id="top">
-        <section className="hero-fiverr"><div className="hero-copy"><div className="micro"><span className="dot" /> AVAILABLE FOR PROJECTS <b>UNITED STATES</b></div><h1>WEB DESIGN<br /><em>& DEVELOPMENT</em><br />FOR PEOPLE<br />WHO <span>CARE.</span></h1><p>I build clean, modern and conversion-focused websites for small businesses, freelancers and startups — with a strong visual direction and a fast frontend.</p><div className="hero-actions"><a className="pill primary" href="#contact">START A PROJECT <span>↗</span></a><a className="pill" href="#work">SEE MY WORK <span>↓</span></a></div></div><SpiralGallery /><div className="hero-profile"><img src={PROFILE_IMAGE} alt="Erik" /><div><b>@webbio</b><span>WEB DEVELOPER</span></div><strong>01 — 10</strong></div><div className="hero-side-note">DESIGN<br />DEVELOPMENT<br />MOTION<br />DETAIL</div></section>
+        <section className="hero-fiverr"><div className="hero-copy"><div className="micro"><span className="dot" /> AVAILABLE FOR PROJECTS <b>UNITED STATES</b></div><h1>WEB DESIGN<br /><em>& DEVELOPMENT</em><br />FOR PEOPLE<br />WHO <span>CARE.</span></h1><p>I build clean, modern and conversion-focused websites for small businesses, freelancers and startups — with a strong visual direction and a fast frontend.</p><div className="hero-actions"><a className="pill primary" href="#contact">START A PROJECT <span>↗</span></a><a className="pill" href="#work">SEE MY WORK <span>↓</span></a></div></div><SpiralGallery /><div className="hero-profile"><img src={PROFILE_IMAGE} alt="Erik" /><div><b>@webbio</b><span>WEB DEVELOPER</span></div><strong>∞ / 10</strong></div><div className="hero-side-note">DESIGN<br />DEVELOPMENT<br />MOTION<br />DETAIL</div></section>
         <Reveal className="trust-strip"><span>WHAT CLIENTS GET</span><b>DESIGN</b><i>×</i><b>DEVELOPMENT</b><i>×</i><b>RESPONSIVE</b><i>×</i><b>PERFORMANCE</b><i>×</i><b>SEO BASICS</b></Reveal>
         <Reveal className="intro" id="about"><div className="eyebrow">01 / ABOUT</div><div className="intro-main"><h2>I MAKE SMALL BUSINESSES <span>LOOK BIG.</span></h2><p>Hi, I’m Erik. I’m a web developer based in the United States. I focus on clean interfaces, responsive layouts and websites that are easy to understand, fast to use and ready to help a business grow.</p><div className="mini-facts"><span>US BASED</span><span>FREELANCE</span><span>WEB / UI</span><span>CREATIVE DEV</span></div></div></Reveal>
         <section id="services" className="services-section"><Reveal className="section-heading"><div className="eyebrow">02 / SERVICES</div><h2>WHAT I CAN<br /><span>BUILD FOR YOU.</span></h2></Reveal><div className="service-list">{services.map(([n, title, text]) => <Reveal className="service-row" key={n}><span>{n}</span><h3>{title}</h3><p>{text}</p><b>↗</b></Reveal>)}</div></section>
