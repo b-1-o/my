@@ -97,8 +97,8 @@ function SpiralGallery() {
   )
 }
 
-function Reveal({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <div className={`reveal ${className}`}>{children}</div>
+function Reveal({ children, className = '', id }: { children: ReactNode; className?: string; id?: string }) {
+  return <div id={id} className={`reveal ${className}`}>{children}</div>
 }
 
 export default function Home() {
