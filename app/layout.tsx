@@ -33,22 +33,26 @@ const carouselScript = `
         const slot = wrap(index - value)
         const abs = Math.abs(slot)
         const angle = -16 + slot * 38
-        const lift = slot * 86
-        const radius = 305 + Math.cos(slot * 0.88) * 24
+        // Tighter vertical spacing makes neighboring photos gently overlap instead of touching edge-to-edge.
+        const lift = slot * 68
+        const radius = 315 + Math.cos(slot * 0.88) * 30
         const scale = 1 - Math.min(abs * 0.035, 0.22)
-        const opacity = Math.max(0, 1 - Math.max(0, abs - 2.1) * 0.3)
-        const blur = Math.max(0, abs - 2.2) * 2.6
+        const opacity = Math.max(0, 1 - Math.max(0, abs - 2.5) * 0.24)
+        const blur = Math.max(0, abs - 2.6) * 2.2
         const tilt = slot * -1.35
+        const depth = Math.max(0, 7 - abs)
 
         card.style.transform = 'rotateY(' + angle + 'deg) translateZ(' + radius + 'px) translateY(' + lift + 'px) rotateY(' + (-angle) + 'deg) rotateZ(' + tilt + 'deg) scale(' + scale + ')'
         card.style.opacity = String(opacity)
         card.style.filter = 'blur(' + blur + 'px)'
+        card.style.zIndex = String(Math.round(depth * 100 - slot * 2))
       })
     }
 
     const tick = () => {
-      current += (target - current) * 0.075
-      if (Math.abs(target - current) < 0.0005) current = target
+      // Slightly softer interpolation keeps cards gliding into and through each other instead of snapping past the overlap point.
+      current += (target - current) * 0.065
+      if (Math.abs(target - current) < 0.0004) current = target
       render(current)
       frame = requestAnimationFrame(tick)
     }
