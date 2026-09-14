@@ -32,8 +32,8 @@ const stack = ['HTML', 'CSS', 'JavaScript', 'React', 'Next.js', 'TypeScript', 'G
 function SpiralGallery() {
   const scene = useRef<HTMLDivElement>(null)
   const stage = useRef<HTMLDivElement>(null)
-  const target = useRef({ rotation: -26, momentum: 0 })
-  const current = useRef({ rotation: -26, momentum: 0 })
+  const target = useRef(-22)
+  const current = useRef(-22)
   const pointer = useRef({ active: false, lastY: 0 })
 
   useEffect(() => {
@@ -42,13 +42,12 @@ function SpiralGallery() {
     let frame = 0
 
     const addRotation = (amount: number) => {
-      target.current.rotation += amount
-      target.current.momentum = Math.max(-18, Math.min(18, target.current.momentum + amount * 0.075))
+      target.current += amount
     }
 
     const onWheel = (event: WheelEvent) => {
       event.preventDefault()
-      addRotation(event.deltaY * 0.34)
+      addRotation(event.deltaY * 0.46)
     }
 
     const onPointerDown = (event: PointerEvent) => {
@@ -62,23 +61,17 @@ function SpiralGallery() {
       event.preventDefault()
       const delta = pointer.current.lastY - event.clientY
       pointer.current.lastY = event.clientY
-      addRotation(delta * 1.15)
+      addRotation(delta * 1.35)
     }
 
-    const endPointer = () => {
+    const stopPointer = () => {
       pointer.current.active = false
     }
 
     const tick = () => {
-      current.current.rotation += (target.current.rotation - current.current.rotation) * 0.095
-      current.current.momentum *= 0.92
-      if (Math.abs(current.current.momentum) > 0.01) {
-        current.current.rotation += current.current.momentum
-        target.current.rotation = current.current.rotation
-      }
-
+      current.current += (target.current - current.current) * 0.09
       if (stage.current) {
-        stage.current.style.setProperty('--helix-rotation', `${current.current.rotation}deg`)
+        stage.current.style.setProperty('--spiral-rotation', `${current.current}deg`)
       }
       frame = requestAnimationFrame(tick)
     }
@@ -86,18 +79,16 @@ function SpiralGallery() {
     root.addEventListener('wheel', onWheel, { passive: false })
     root.addEventListener('pointerdown', onPointerDown)
     root.addEventListener('pointermove', onPointerMove, { passive: false })
-    root.addEventListener('pointerup', endPointer)
-    root.addEventListener('pointercancel', endPointer)
-    root.addEventListener('pointerleave', endPointer)
+    root.addEventListener('pointerup', stopPointer)
+    root.addEventListener('pointercancel', stopPointer)
     frame = requestAnimationFrame(tick)
 
     return () => {
       root.removeEventListener('wheel', onWheel)
       root.removeEventListener('pointerdown', onPointerDown)
       root.removeEventListener('pointermove', onPointerMove)
-      root.removeEventListener('pointerup', endPointer)
-      root.removeEventListener('pointercancel', endPointer)
-      root.removeEventListener('pointerleave', endPointer)
+      root.removeEventListener('pointerup', stopPointer)
+      root.removeEventListener('pointercancel', stopPointer)
       cancelAnimationFrame(frame)
     }
   }, [])
@@ -105,66 +96,55 @@ function SpiralGallery() {
   return (
     <>
       <style>{`
-        .helix-scene{position:absolute;inset:0 0 0 20%;perspective:1700px;overflow:hidden;cursor:ns-resize;touch-action:none;user-select:none;}
-        .helix-scene:before{content:"";position:absolute;inset:5% 8% 0 16%;background:radial-gradient(circle at 58% 46%,rgba(255,255,255,.105),transparent 35%),radial-gradient(circle at 58% 52%,rgba(130,155,255,.08),transparent 52%);filter:blur(18px);pointer-events:none;}
-        .helix-glow{position:absolute;left:47%;top:50%;width:min(58vw,760px);aspect-ratio:1;margin:-29vw 0 0 -29vw;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.13),rgba(130,145,255,.05) 30%,transparent 67%);filter:blur(15px);pointer-events:none;}
-        .helix-grid{position:absolute;inset:-10%;opacity:.22;background:linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px);background-size:70px 70px;transform:perspective(800px) rotateX(68deg) translateY(28%);transform-origin:50% 100%;mask-image:linear-gradient(to bottom,transparent 0%,#000 52%,transparent 100%);pointer-events:none;}
-        .helix-stage{position:absolute;left:55%;top:51%;width:640px;height:640px;transform-style:preserve-3d;transform:translate(-50%,-50%) rotateX(-8deg) rotateY(12deg);will-change:transform;}
-        .helix-track{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateY(var(--helix-rotation,-26deg));will-change:transform;}
-        .helix-card{--radius:330px;--lift:0px;position:absolute;left:50%;top:50%;width:255px;height:165px;margin:-82px 0 0 -127px;padding:7px;border:1px solid rgba(255,255,255,.24);border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.16),rgba(255,255,255,.035));box-shadow:0 35px 100px rgba(0,0,0,.58),inset 0 1px rgba(255,255,255,.24);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);transform-style:preserve-3d;transform:rotateY(var(--angle)) translateZ(var(--radius)) translateY(var(--lift)) rotateY(calc(var(--angle) * -1));transition:filter .35s,box-shadow .35s;}
-        .helix-card:after{content:"";position:absolute;inset:-1px;border-radius:19px;padding:1px;background:linear-gradient(130deg,rgba(255,255,255,.65),transparent 26%,transparent 70%,rgba(255,255,255,.14));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
-        .helix-card:hover{filter:brightness(1.13) translateZ(5px);box-shadow:0 42px 110px rgba(0,0,0,.7),inset 0 1px rgba(255,255,255,.34);}
-        .helix-image{position:absolute;inset:7px;overflow:hidden;border-radius:12px;background:#111;}
-        .helix-image img{width:100%;height:100%;display:block;object-fit:cover;filter:saturate(.8) contrast(1.06);opacity:.84;transition:transform .8s,opacity .4s;}
-        .helix-card:hover .helix-image img{transform:scale(1.045);opacity:1;}
-        .helix-image:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 32%,rgba(0,0,0,.8) 100%);}
-        .helix-number{position:absolute;top:9px;right:9px;z-index:2;padding:4px 7px;border:1px solid rgba(255,255,255,.22);border-radius:7px;background:rgba(0,0,0,.35);color:#fff;font:8px 'DM Mono';backdrop-filter:blur(10px);}
-        .helix-copy{position:absolute;left:19px;right:19px;bottom:16px;z-index:2;display:flex;flex-direction:column;color:#fff;text-shadow:0 2px 20px #000;}
-        .helix-copy small{font:7px 'DM Mono';letter-spacing:.13em;color:#ccc;}
-        .helix-copy strong{font:600 20px 'Space Grotesk';letter-spacing:-.065em;}
-        .helix-ring{position:absolute;left:55%;top:51%;width:520px;height:520px;margin:-260px;border:1px solid rgba(255,255,255,.08);border-radius:50%;transform:rotateX(70deg) rotateZ(-12deg);pointer-events:none;box-shadow:0 0 80px rgba(255,255,255,.04);}
-        .helix-ring.second{width:720px;height:720px;margin:-360px;transform:rotateX(70deg) rotateZ(22deg);opacity:.55;}
-        .helix-core{position:absolute;left:50%;top:50%;width:172px;height:172px;margin:-86px;border:1px solid rgba(255,255,255,.3);border-radius:50%;background:radial-gradient(circle at 33% 25%,rgba(255,255,255,.2),rgba(10,10,12,.84) 52%,rgba(0,0,0,.96));box-shadow:0 0 100px rgba(255,255,255,.08),0 28px 90px rgba(0,0,0,.8),inset 0 1px rgba(255,255,255,.22);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:12;overflow:hidden;}
-        .helix-core:before{content:"";position:absolute;inset:10px;border-radius:50%;border:1px solid rgba(255,255,255,.08);}
-        .helix-core .core-light{position:absolute;width:100px;height:100px;border-radius:50%;background:rgba(190,205,255,.12);filter:blur(25px);}
-        .helix-core img{position:relative;width:52px;height:52px;border-radius:50%;object-fit:cover;filter:grayscale(1);border:1px solid rgba(255,255,255,.36);margin-bottom:8px;}
-        .helix-core b{position:relative;font:700 20px 'Space Grotesk';letter-spacing:-.08em;}
-        .helix-core span{position:relative;font:8px 'DM Mono';color:#888;margin-top:2px;}
-        .helix-core small{position:relative;margin-top:12px;font:7px 'DM Mono';letter-spacing:.08em;color:#6f6f6f;}
-        .helix-hint{position:absolute;right:4vw;bottom:5vh;z-index:20;display:flex;align-items:center;gap:9px;padding:11px 14px;border:1px solid rgba(255,255,255,.11);border-radius:999px;background:rgba(255,255,255,.035);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);color:#777;font:8px 'DM Mono';}
-        .helix-hint i{width:6px;height:6px;border-radius:50%;background:#d8ff63;box-shadow:0 0 12px #d8ff63;}
-        .helix-hint b{margin-left:8px;color:#eee;font-weight:500;}
-        .helix-hint em{font-style:normal;color:#555;}
-        @media(max-width:900px){.helix-scene{inset:0;top:37%;height:63%;}.helix-grid{background-size:48px 48px;}.helix-stage{left:56%;top:58%;width:560px;height:560px;transform:translate(-50%,-50%) rotateX(-7deg) rotateY(8deg) scale(.72);}.helix-ring{left:56%;top:58%;width:470px;height:470px;margin:-235px;}.helix-ring.second{display:none;}.helix-card{width:230px;height:150px;margin:-75px 0 0 -115px;--radius:285px;}.helix-core{width:150px;height:150px;margin:-75px;}.helix-hint{right:20px;bottom:20px;font-size:7px;}.hero-profile{z-index:30;}.hero-copy{z-index:40;}}
-        @media(max-width:520px){.helix-scene{top:36%;height:64%;}.helix-stage{left:55%;top:60%;transform:translate(-50%,-50%) rotateX(-6deg) rotateY(6deg) scale(.54);}.helix-ring{left:55%;top:60%;width:400px;height:400px;margin:-200px;}.helix-card{width:220px;height:142px;margin:-71px 0 0 -110px;--radius:265px;}.helix-core{width:136px;height:136px;margin:-68px;}.helix-core img{width:44px;height:44px;}.helix-hint{left:50%;right:auto;bottom:18px;transform:translateX(-50%);white-space:nowrap;}.hero-fiverr{overflow:hidden;}.hero-copy p{max-width:300px;}.hero-profile strong{display:none;}}
+        .spiral-scene{position:absolute;inset:0 0 0 16%;perspective:1800px;overflow:hidden;cursor:ns-resize;touch-action:none;user-select:none;z-index:5;}
+        .spiral-scene:before{content:"";position:absolute;left:48%;top:50%;width:62%;height:92%;transform:translate(-50%,-50%);background:radial-gradient(ellipse at center,rgba(255,255,255,.12) 0%,rgba(140,155,255,.065) 27%,transparent 66%);filter:blur(28px);pointer-events:none;}
+        .spiral-axis{position:absolute;left:57%;top:12%;width:1px;height:76%;background:linear-gradient(to bottom,transparent,rgba(255,255,255,.12) 18%,rgba(255,255,255,.16) 50%,rgba(255,255,255,.12) 82%,transparent);box-shadow:0 0 26px rgba(255,255,255,.12);opacity:.7;pointer-events:none;}
+        .spiral-stage{position:absolute;left:57%;top:50%;width:760px;height:760px;transform-style:preserve-3d;transform:translate(-50%,-50%) rotateX(-3deg) rotateY(-8deg);will-change:transform;}
+        .spiral-track{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateY(var(--spiral-rotation,-22deg));will-change:transform;}
+        .spiral-card{--angle:0deg;--lift:0px;--radius:300px;--tilt:0deg;position:absolute;left:50%;top:50%;width:286px;height:178px;margin:-89px 0 0 -143px;padding:7px;border:1px solid rgba(255,255,255,.26);border-radius:20px;background:linear-gradient(145deg,rgba(255,255,255,.17),rgba(255,255,255,.04));box-shadow:0 36px 90px rgba(0,0,0,.56),inset 0 1px rgba(255,255,255,.28);backdrop-filter:blur(18px) saturate(145%);-webkit-backdrop-filter:blur(18px) saturate(145%);transform-style:preserve-3d;transform:rotateY(var(--angle)) translateZ(var(--radius)) translateY(var(--lift)) rotateY(calc(var(--angle) * -1)) rotateZ(var(--tilt));}
+        .spiral-card:before{content:"";position:absolute;inset:0;border-radius:20px;background:linear-gradient(120deg,rgba(255,255,255,.16),transparent 24%,transparent 72%,rgba(255,255,255,.05));pointer-events:none;z-index:3;}
+        .spiral-card:after{content:"";position:absolute;inset:-1px;border-radius:21px;padding:1px;background:linear-gradient(125deg,rgba(255,255,255,.72),transparent 25%,transparent 69%,rgba(255,255,255,.12));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;z-index:6;}
+        .spiral-image{position:absolute;inset:7px;overflow:hidden;border-radius:13px;background:#101013;}
+        .spiral-image img{display:block;width:100%;height:100%;object-fit:cover;opacity:.86;filter:saturate(.82) contrast(1.05);transition:transform .7s ease,opacity .35s ease;}
+        .spiral-card:hover .spiral-image img{transform:scale(1.055);opacity:1;}
+        .spiral-image:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,4,6,0) 35%,rgba(4,4,6,.88) 100%);}
+        .spiral-number{position:absolute;right:10px;top:10px;z-index:4;padding:5px 7px;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:rgba(0,0,0,.33);color:#fff;font:8px 'DM Mono';backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
+        .spiral-copy{position:absolute;left:19px;right:19px;bottom:17px;z-index:4;display:flex;flex-direction:column;color:#fff;text-shadow:0 2px 20px #000;}
+        .spiral-copy small{font:7px 'DM Mono';letter-spacing:.15em;color:#c8c8c8;margin-bottom:2px;}
+        .spiral-copy strong{font:600 21px 'Space Grotesk';letter-spacing:-.07em;}
+        .spiral-trace{position:absolute;left:50%;top:50%;width:490px;height:560px;margin:-280px 0 0 -245px;border:1px solid rgba(255,255,255,.045);border-radius:50%;transform:rotateX(76deg) rotateZ(24deg);box-shadow:0 0 70px rgba(255,255,255,.03);pointer-events:none;}
+        .spiral-hint{position:absolute;right:4vw;bottom:5vh;z-index:10;display:flex;align-items:center;gap:9px;padding:10px 13px;border:1px solid rgba(255,255,255,.1);border-radius:999px;background:rgba(255,255,255,.035);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);color:#777;font:8px 'DM Mono';}
+        .spiral-hint i{width:6px;height:6px;border-radius:50%;background:#d8ff63;box-shadow:0 0 12px #d8ff63;}
+        .spiral-hint b{color:#efefef;font-weight:500;margin-left:7px;}
+        .spiral-hint em{font-style:normal;color:#555;}
+        @media(max-width:1100px){.spiral-scene{inset:0;}.spiral-stage{left:61%;transform:translate(-50%,-50%) rotateX(-3deg) rotateY(-6deg) scale(.84);}.spiral-axis{left:61%;}.spiral-trace{left:50%;}.spiral-card{width:260px;height:163px;margin:-81px 0 0 -130px;}.spiral-hint{right:22px;bottom:22px;}}
+        @media(max-width:760px){.spiral-scene{top:40%;height:60%;}.spiral-stage{left:58%;top:52%;width:640px;height:680px;transform:translate(-50%,-50%) rotateX(-2deg) rotateY(-4deg) scale(.58);}.spiral-axis{left:58%;top:7%;height:86%;}.spiral-trace{display:none;}.spiral-card{width:238px;height:149px;margin:-74px 0 0 -119px;--radius:238px;}.spiral-hint{left:50%;right:auto;bottom:18px;transform:translateX(-50%);white-space:nowrap;font-size:7px;}.hero-copy{z-index:20;}.hero-profile{z-index:30;}}
+        @media(max-width:480px){.spiral-scene{top:41%;height:59%;}.spiral-stage{left:56%;top:53%;transform:translate(-50%,-50%) rotateX(-2deg) rotateY(-3deg) scale(.49);}.spiral-axis{left:56%;}.spiral-card{width:224px;height:141px;margin:-70px 0 0 -112px;--radius:205px;}.spiral-copy strong{font-size:19px;}.spiral-hint{bottom:14px;}.hero-profile strong{display:none;}.hero-copy p{max-width:295px;}}
       `}</style>
-      <div ref={scene} className="helix-scene" aria-label="Interactive portfolio gallery. Scroll or drag inside to rotate.">
-        <div className="helix-glow" />
-        <div className="helix-grid" />
-        <div className="helix-ring" />
-        <div className="helix-ring second" />
-        <div ref={stage} className="helix-stage">
-          <div className="helix-track">
+      <div ref={scene} className="spiral-scene" aria-label="Interactive 3D spiral gallery. Scroll or drag inside to rotate.">
+        <div className="spiral-axis" />
+        <div className="spiral-trace" />
+        <div ref={stage} className="spiral-stage">
+          <div className="spiral-track">
             {orbitCards.map((card, i) => {
-              const angle = i * 72
-              const lift = (i - (orbitCards.length - 1) / 2) * 55
+              const center = (orbitCards.length - 1) / 2
+              const angle = (i - center) * 40
+              const lift = (i - center) * 76
+              const tilt = (i - center) * -1.3
               return (
-                <article className="helix-card" key={card.title} style={{ '--angle': `${angle}deg`, '--lift': `${lift}px` } as CSSProperties}>
-                  <div className="helix-image"><img src={card.image} alt={card.title} loading={i < 3 ? 'eager' : 'lazy'} /><span className="helix-number">{String(i + 1).padStart(2, '0')}</span></div>
-                  <div className="helix-copy"><small>{card.tag}</small><strong>{card.title}</strong></div>
+                <article
+                  className="spiral-card"
+                  key={card.title}
+                  style={{ '--angle': `${angle}deg`, '--lift': `${lift}px`, '--tilt': `${tilt}deg` } as CSSProperties}
+                >
+                  <div className="spiral-image"><img src={card.image} alt={card.title} loading={i < 3 ? 'eager' : 'lazy'} /><span className="spiral-number">{String(i + 1).padStart(2, '0')}</span></div>
+                  <div className="spiral-copy"><small>{card.tag}</small><strong>{card.title}</strong></div>
                 </article>
               )
             })}
           </div>
-          <div className="helix-core">
-            <div className="core-light" />
-            <img src={PROFILE_IMAGE} alt="Erik" />
-            <b>ERIK</b>
-            <span>@webbio</span>
-            <small>WEB DEVELOPER / UI DESIGNER</small>
-          </div>
         </div>
-        <div className="helix-hint"><i /> SCROLL / DRAG <b>01</b><em>/ 10</em></div>
+        <div className="spiral-hint"><i /> SCROLL / DRAG <b>01</b><em>/ 10</em></div>
       </div>
     </>
   )
